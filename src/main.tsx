@@ -49,9 +49,9 @@ Devvit.addCustomPostType({
     const [allUserData] = useState(async () => {
       const hScanResponse = await context.redis.hScan('user_subreddits', 0);
 
-      const userDataSet = new Set<String>();
+      const userDataSet = new Set<JSONValue>();
       hScanResponse.fieldValues.forEach((item) => {
-        userDataSet.add(item as unknown as string);
+        userDataSet.add(item as unknown as JSONValue);
       });
 
       const userDataList = [...userDataSet]; //
