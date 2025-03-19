@@ -1,90 +1,107 @@
 import './createPost.js';
-
-import { Devvit, useState, useWebView } from '@devvit/public-api';
-
+import { Devvit, JSONValue, useState, useWebView } from '@devvit/public-api';
 import type { DevvitMessage, WebViewMessage } from './message.js';
 
 Devvit.configure({
   redditAPI: true,
-  redis: true,
+  redis: true
 });
 
-// Add a custom post type to Devvit
 Devvit.addCustomPostType({
-  name: 'Web View Example',
+  name: 'User Subreddit Tracker',
   height: 'tall',
   render: (context) => {
-    // Load username with `useAsync` hook
+    // Fetch username
     const [username] = useState(async () => {
       return (await context.reddit.getCurrentUsername()) ?? 'anon';
     });
 
-    // Load latest counter from redis with `useAsync` hook
-    const [counter, setCounter] = useState(async () => {
-      const redisCount = await context.redis.get(`counter_${context.postId}`);
-      return Number(redisCount ?? 0);
+    // Fetch user comments & posts, extract subreddits, and store in Redis
+    const [subreddits] = useState(async () => {
+      if (!username) return []; // Ensure username is available
+
+      // Fetch user data (returns a Listing<Post | Comment>)
+      const userData = await context.reddit.getCommentsAndPostsByUser({
+        username
+      });
+      if (!userData) return [];
+
+      // Extract subreddits
+      const subredditSet = new Set<string>();
+
+      for await (const item of userData) {
+        if ('subredditName' in item) {
+          subredditSet.add(item.subredditName);
+        }
+      }
+
+      const subredditList = [...subredditSet]; //
+
+      // Store in Redis
+      await context.redis.hSet(`user_subreddits`, {
+        [username]: JSON.stringify(subredditList)
+      });
+
+      return subredditList;
+    });
+
+    // Fetch all usernames from Redis using scan
+    const [allUserData] = useState(async () => {
+      const hScanResponse = await context.redis.hScan('user_subreddits', 0);
+
+      const userDataSet = new Set<String>();
+      hScanResponse.fieldValues.forEach((item) => {
+        userDataSet.add(item as unknown as string);
+      });
+
+      const userDataList = [...userDataSet]; //
+
+      return userDataList ?? []; // Return all the usernames collected
     });
 
     const webView = useWebView<WebViewMessage, DevvitMessage>({
-      // URL of your web view content
       url: 'page.html',
-
-      // Handle messages sent from the web view
       async onMessage(message, webView) {
         switch (message.type) {
           case 'webViewReady':
             webView.postMessage({
               type: 'initialData',
-              data: {
-                username: username,
-                currentCounter: counter,
-              },
-            });
-            break;
-          case 'setCounter':
-            await context.redis.set(
-              `counter_${context.postId}`,
-              message.data.newCounter.toString()
-            );
-            setCounter(message.data.newCounter);
-
-            webView.postMessage({
-              type: 'updateCounter',
-              data: {
-                currentCounter: message.data.newCounter,
-              },
+              data: { subreddits, allUserData }
             });
             break;
           default:
-            throw new Error(`Unknown message type: ${message satisfies never}`);
+            throw new Error(`Unknown message type: ${message}`);
         }
       },
       onUnmount() {
         context.ui.showToast('Web view closed!');
-      },
+      }
     });
 
-    // Render the custom post type
     return (
-      <vstack grow padding="small">
-        <vstack grow alignment="middle center">
-          <text size="xlarge" weight="bold">
-            Example App
+      <vstack grow padding='small'>
+        <vstack grow alignment='middle center'>
+          <text size='xlarge' weight='bold'>
+            User Subreddit Tracker
           </text>
           <spacer />
-          <vstack alignment="start middle">
+          <vstack alignment='start middle'>
             <hstack>
-              <text size="medium">Username:</text>
-              <text size="medium" weight="bold">
-                {' '}
+              <text size='medium'>Username:</text>
+              <text size='medium' weight='bold'>
                 {username ?? ''}
               </text>
             </hstack>
             <hstack>
-              <text size="medium">Current counter:</text>
-              <text size="medium" weight="bold">
-                {' '}
-                {counter ?? ''}
+              <text size='medium'>Subreddits:</text>
+              <text size='medium' weight='bold'>
+                {subreddits ? subreddits.toString() : 'None'}
+              </text>
+            </hstack>
+            <hstack>
+              <text size='medium'>All Users:</text>
+              <text size='medium' weight='bold'>
+                {allUserData ? allUserData.toString() : 'None'}
               </text>
             </hstack>
           </vstack>
@@ -93,7 +110,7 @@ Devvit.addCustomPostType({
         </vstack>
       </vstack>
     );
-  },
+  }
 });
 
 export default Devvit;
