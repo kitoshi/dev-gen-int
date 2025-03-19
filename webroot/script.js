@@ -4,16 +4,13 @@
 class App {
   constructor() {
     // Get references to the HTML elements
-    this.output = /** @type {HTMLPreElement} */ (document.querySelector('#messageOutput'));
-    this.increaseButton = /** @type {HTMLButtonElement} */ (
-      document.querySelector('#btn-increase')
+    this.output = /** @type {HTMLPreElement} */ (
+      document.querySelector('#messageOutput')
     );
-    this.decreaseButton = /** @type {HTMLButtonElement} */ (
-      document.querySelector('#btn-decrease')
+
+    this.usernameLabel = /** @type {HTMLSpanElement} */ (
+      document.querySelector('.profile-data')
     );
-    this.usernameLabel = /** @type {HTMLSpanElement} */ (document.querySelector('#username'));
-    this.counterLabel = /** @type {HTMLSpanElement} */ (document.querySelector('#counter'));
-    this.counter = 0;
 
     // When the Devvit app sends a message with `postMessage()`, this will be triggered
     addEventListener('message', this.#onMessage);
@@ -21,16 +18,6 @@ class App {
     // This event gets called when the web view is loaded
     addEventListener('load', () => {
       postWebViewMessage({ type: 'webViewReady' });
-    });
-
-    this.increaseButton.addEventListener('click', () => {
-      // Sends a message to the Devvit app
-      postWebViewMessage({ type: 'setCounter', data: { newCounter: this.counter + 1 } });
-    });
-
-    this.decreaseButton.addEventListener('click', () => {
-      // Sends a message to the Devvit app
-      postWebViewMessage({ type: 'setCounter', data: { newCounter: this.counter - 1 } });
     });
   }
 
@@ -44,23 +31,18 @@ class App {
     const { message } = ev.data.data;
 
     // Always output full message
-    this.output.replaceChildren(JSON.stringify(message, undefined, 2));
+    if (this.output) {
+      this.output.replaceChildren(JSON.stringify(message, undefined, 2));
+    }
 
     switch (message.type) {
       case 'initialData': {
         // Load initial data
-        const { username, currentCounter } = message.data;
-        this.usernameLabel.innerText = username;
-        this.counter = currentCounter;
-        this.counterLabel.innerText = `${this.counter}`;
+        const { subreddits, allUserData } = message.data;
+        this.usernameLabel.innerText = allUserData.toString();
         break;
       }
-      case 'updateCounter': {
-        const { currentCounter } = message.data;
-        this.counter = currentCounter;
-        this.counterLabel.innerText = `${this.counter}`;
-        break;
-      }
+
       default:
         /** to-do: @satisifes {never} */
         const _ = message;
