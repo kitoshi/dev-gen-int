@@ -2,6 +2,8 @@ class App {
   constructor() {
     this.card = document.querySelector('.card');
     this.usernameLabel = document.querySelector('.profile-data');
+    this.matchData = document.querySelector('.match-data');
+    this.matchDetails = document.querySelector('.match-details');
     this.output = document.querySelector('#messageOutput');
     this.startX = 0;
     this.currentX = 0;
@@ -95,7 +97,13 @@ class App {
 
     if (message.type === 'initialData') {
       const { username, subreddits, allUserData } = message.data;
+      console.log('Username:', username);
+      console.log('Subreddits:', subreddits);
+      console.log('All User Data:', allUserData);
       this.usernameLabel.innerText = username.toString();
+      this.matchData.innerText = subreddits.toString();
+      const parsedData = JSON.parse(allUserData[0].value);
+      this.matchDetails.innerText = parsedData.join(', ');
     }
   };
 }

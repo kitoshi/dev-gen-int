@@ -48,7 +48,7 @@ Devvit.addCustomPostType({
     // Fetch all usernames from Redis using scan
     const [allUserData] = useState(async () => {
       const hScanResponse = await context.redis.hScan('user_subreddits', 0);
-
+      console.log('Redis Data:', hScanResponse);
       const userDataSet = new Set<JSONValue>();
       hScanResponse.fieldValues.forEach((item) => {
         userDataSet.add(item as unknown as JSONValue);
@@ -61,16 +61,20 @@ Devvit.addCustomPostType({
 
     const webView = useWebView<WebViewMessage, DevvitMessage>({
       url: 'page.html',
-      async onMessage(message, webView) {
+      onMessage(message, webView) {
+        console.log('Received message:', message);
         switch (message.type) {
           case 'webViewReady':
+            console.log('Sending initial data:', {
+              username,
+              subreddits,
+              allUserData
+            });
             webView.postMessage({
               type: 'initialData',
               data: { username, subreddits, allUserData }
             });
             break;
-          default:
-            throw new Error(`Unknown message type: ${message}`);
         }
       },
       onUnmount() {
@@ -89,7 +93,7 @@ Devvit.addCustomPostType({
             <hstack>
               <text size='medium'>Username:</text>
               <text size='medium' weight='bold'>
-                {username ? username.toString() : 'unknown'}
+                {username ? username : 'unknown'}
               </text>
             </hstack>
             <hstack>

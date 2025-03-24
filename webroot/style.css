@@ -46,3 +46,9 @@ body {
   padding: 20px;
   text-align: center;
 }
+.profile-data,
+.match-data,
+.match-details {
+  white-space: pre-wrap; /* Ensures text wraps */
+  word-wrap: break-word; /* Breaks long words */
+}
