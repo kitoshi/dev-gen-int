@@ -66,7 +66,7 @@ Devvit.addCustomPostType({
           case 'webViewReady':
             webView.postMessage({
               type: 'initialData',
-              data: { subreddits, allUserData }
+              data: { username, subreddits, allUserData }
             });
             break;
           default:
@@ -89,7 +89,7 @@ Devvit.addCustomPostType({
             <hstack>
               <text size='medium'>Username:</text>
               <text size='medium' weight='bold'>
-                {username ?? ''}
+                {username ? username.toString() : 'unknown'}
               </text>
             </hstack>
             <hstack>

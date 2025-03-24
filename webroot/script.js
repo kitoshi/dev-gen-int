@@ -1,61 +1,105 @@
-/** @typedef {import('../src/message.ts').DevvitSystemMessage} DevvitSystemMessage */
-/** @typedef {import('../src/message.ts').WebViewMessage} WebViewMessage */
-
 class App {
   constructor() {
-    // Get references to the HTML elements
-    this.output = /** @type {HTMLPreElement} */ (
-      document.querySelector('#messageOutput')
-    );
+    this.card = document.querySelector('.card');
+    this.usernameLabel = document.querySelector('.profile-data');
+    this.output = document.querySelector('#messageOutput');
+    this.startX = 0;
+    this.currentX = 0;
+    this.dragging = false;
 
-    this.usernameLabel = /** @type {HTMLSpanElement} */ (
-      document.querySelector('.profile-data')
-    );
+    // Create vote indicators
+    this.voteIndicator = document.createElement('div');
+    this.voteIndicator.classList.add('vote-indicator');
+    this.card.parentElement.appendChild(this.voteIndicator);
 
-    // When the Devvit app sends a message with `postMessage()`, this will be triggered
+    // Style vote indicator
+    Object.assign(this.voteIndicator.style, {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      fontSize: '2rem',
+      fontWeight: 'bold',
+      opacity: '0',
+      transition: 'opacity 0.2s ease-out',
+      pointerEvents: 'none'
+    });
+
+    // Drag event listeners
+    this.card.addEventListener('pointerdown', this.#onPointerDown);
+    this.card.addEventListener('pointermove', this.#onPointerMove);
+    this.card.addEventListener('pointerup', this.#onPointerUp);
+    this.card.addEventListener('pointerleave', this.#onPointerUp);
+
     addEventListener('message', this.#onMessage);
-
-    // This event gets called when the web view is loaded
     addEventListener('load', () => {
       postWebViewMessage({ type: 'webViewReady' });
     });
   }
 
-  /**
-   * @arg {MessageEvent<DevvitSystemMessage>} ev
-   * @return {void}
-   */
+  #onPointerDown = (event) => {
+    this.startX = event.clientX;
+    this.dragging = true;
+    this.card.style.transition = 'none';
+    this.voteIndicator.innerText = '';
+    this.voteIndicator.style.opacity = '0';
+  };
+
+  #onPointerMove = (event) => {
+    if (!this.dragging) return;
+    this.currentX = event.clientX - this.startX;
+    this.card.style.transform = `translateX(${this.currentX}px)`;
+
+    if (this.currentX > 50) {
+      this.voteIndicator.innerText = 'LIKE';
+      this.voteIndicator.style.color = 'orange';
+      this.voteIndicator.style.opacity = '1';
+    } else if (this.currentX < -50) {
+      this.voteIndicator.innerText = 'DISLIKE';
+      this.voteIndicator.style.color = 'purple';
+      this.voteIndicator.style.opacity = '1';
+    } else {
+      this.voteIndicator.style.opacity = '0';
+    }
+  };
+
+  #onPointerUp = () => {
+    if (!this.dragging) return;
+    this.dragging = false;
+    this.card.style.transition = 'transform 0.3s ease-out';
+    this.voteIndicator.style.transition = 'opacity 0.5s ease-out';
+
+    if (Math.abs(this.currentX) > 100) {
+      this.card.style.transition =
+        'transform 0.3s ease-out, opacity 0.5s ease-out';
+      this.card.style.opacity = '0';
+      setTimeout(() => {
+        this.card.style.display = 'none'; // Hide after fade-out
+      }, 500);
+    } else {
+      this.card.style.transform = 'translateX(0)';
+    }
+
+    setTimeout(() => {
+      this.voteIndicator.style.opacity = '0';
+    }, 500);
+  };
+
   #onMessage = (ev) => {
-    // Reserved type for messages sent via `context.ui.webView.postMessage`
     if (ev.data.type !== 'devvit-message') return;
     const { message } = ev.data.data;
-
-    // Always output full message
     if (this.output) {
       this.output.replaceChildren(JSON.stringify(message, undefined, 2));
     }
+    console.log(message.toString());
 
-    switch (message.type) {
-      case 'initialData': {
-        // Load initial data
-        const { subreddits, allUserData } = message.data;
-        this.usernameLabel.innerText = allUserData.toString();
-        break;
-      }
-
-      default:
-        /** to-do: @satisifes {never} */
-        const _ = message;
-        break;
+    if (message.type === 'initialData') {
+      const { username, subreddits, allUserData } = message.data;
+      this.usernameLabel.innerText = username.toString();
     }
   };
 }
 
-/**
- * Sends a message to the Devvit app.
- * @arg {WebViewMessage} msg
- * @return {void}
- */
 function postWebViewMessage(msg) {
   parent.postMessage(msg, '*');
 }
