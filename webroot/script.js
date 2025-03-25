@@ -80,7 +80,7 @@ class App {
         postWebViewMessage({
           type: 'matchUpdate',
           data:
-            this.matchUsername.innerText + ',' + this.usernameLabel.innerText
+            this.usernameLabel.innerText + ',' + this.matchUsername.innerText
         });
       }
       this.card.style.transition =

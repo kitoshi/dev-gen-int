@@ -8,12 +8,12 @@ Devvit.configure({
 });
 
 Devvit.addCustomPostType({
-  name: 'User Subreddit Tracker',
+  name: 'Subreddit Friendr',
   height: 'tall',
   render: (context) => {
     // Fetch username
     const [username] = useState(async () => {
-      return (await context.reddit.getCurrentUsername()) ?? 'anon';
+      return (await context.reddit.getCurrentUsername()) ?? '';
     });
 
     // Fetch user comments & posts, extract subreddits, and store in Redis
@@ -48,7 +48,7 @@ Devvit.addCustomPostType({
     // Fetch all usernames from Redis using scan
     const [allUserData] = useState(async () => {
       const hScanResponse = await context.redis.hScan('user_subreddits', 0);
-      console.log('Redis Data:', hScanResponse);
+      console.log('Redis Data user_subreddits:', hScanResponse);
       const userDataSet = new Set<JSONValue>();
       hScanResponse.fieldValues.forEach((item) => {
         userDataSet.add(item as unknown as JSONValue);
@@ -57,6 +57,20 @@ Devvit.addCustomPostType({
       const userDataList = [...userDataSet]; //
 
       return userDataList ?? []; // Return all the usernames collected
+    });
+
+    // Fetch all usernames from Redis using scan
+    const [allUserMatches] = useState(async () => {
+      const hScanResponse = await context.redis.hScan('user_friends', 0);
+      console.log('Redis Data user_friends:', hScanResponse);
+      const userDataSet = new Set<JSONValue>();
+      hScanResponse.fieldValues.forEach((item) => {
+        userDataSet.add(item as unknown as JSONValue);
+      });
+
+      const userMatchesList = [...userDataSet];
+
+      return userMatchesList ?? [];
     });
 
     const webView = useWebView<WebViewMessage, DevvitMessage>({
@@ -68,11 +82,12 @@ Devvit.addCustomPostType({
             console.log('Sending initial data:', {
               username,
               subreddits,
-              allUserData
+              allUserData,
+              allUserMatches
             });
             webView.postMessage({
               type: 'initialData',
-              data: { username, subreddits, allUserData }
+              data: { username, subreddits, allUserData, allUserMatches }
             });
             break;
           case 'matchUpdate':
@@ -85,9 +100,11 @@ Devvit.addCustomPostType({
               await context.redis.hSet(`user_friends`, {
                 [user]: friend
               });
-              await context.redis.set(
-                `counter_${context.postId}`,
-                message.data.toString()
+              console.log(
+                'User:',
+                user,
+                'Friend:',
+                friend + '\n Set in redis user_friends'
               );
             }
             break;
