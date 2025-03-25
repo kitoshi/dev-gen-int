@@ -7,7 +7,12 @@ export type DevvitMessage = {
 };
 
 /** Message from the web view to Devvit. */
-export type WebViewMessage = { type: 'webViewReady' };
+export type WebViewMessage =
+  | { type: 'webViewReady' }
+  | {
+      data: JSONValue;
+      type: 'matchUpdate';
+    };
 
 /**
  * Web view MessageEvent listener data type.

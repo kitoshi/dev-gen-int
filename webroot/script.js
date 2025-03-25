@@ -2,7 +2,7 @@ class App {
   constructor() {
     this.card = document.querySelector('.card');
     this.usernameLabel = document.querySelector('.profile-data');
-    this.matchData = document.querySelector('.match-data');
+    this.matchUsername = document.querySelector('.match-username');
     this.matchDetails = document.querySelector('.match-details');
     this.output = document.querySelector('#messageOutput');
     this.startX = 0;
@@ -53,11 +53,11 @@ class App {
     this.card.style.transform = `translateX(${this.currentX}px)`;
 
     if (this.currentX > 50) {
-      this.voteIndicator.innerText = 'LIKE';
+      this.voteIndicator.innerText = 'UPVOTE';
       this.voteIndicator.style.color = 'orange';
       this.voteIndicator.style.opacity = '1';
     } else if (this.currentX < -50) {
-      this.voteIndicator.innerText = 'DISLIKE';
+      this.voteIndicator.innerText = 'DOWNVOTE';
       this.voteIndicator.style.color = 'purple';
       this.voteIndicator.style.opacity = '1';
     } else {
@@ -72,6 +72,17 @@ class App {
     this.voteIndicator.style.transition = 'opacity 0.5s ease-out';
 
     if (Math.abs(this.currentX) > 100) {
+      if (this.currentX > 0) {
+        console.log(
+          'Posting Data:',
+          this.matchUsername.innerText + ',' + this.usernameLabel.innerText
+        );
+        postWebViewMessage({
+          type: 'matchUpdate',
+          data:
+            this.matchUsername.innerText + ',' + this.usernameLabel.innerText
+        });
+      }
       this.card.style.transition =
         'transform 0.3s ease-out, opacity 0.5s ease-out';
       this.card.style.opacity = '0';
@@ -101,9 +112,23 @@ class App {
       console.log('Subreddits:', subreddits);
       console.log('All User Data:', allUserData);
       this.usernameLabel.innerText = username.toString();
-      this.matchData.innerText = subreddits.toString();
-      const parsedData = JSON.parse(allUserData[0].value);
-      this.matchDetails.innerText = parsedData.join(', ');
+      for (const user of allUserData) {
+        // Parse the value to get the list of subreddits or other data
+        const userKey = user.field;
+        const userSubreddits = JSON.parse(user.value);
+        // If the current userKey (username) does not match, log or handle it
+        if (userKey !== username) {
+          console.log('First non-matching user:', userKey);
+          console.log(
+            'Subreddits or data associated with this user:',
+            userSubreddits
+          );
+          this.matchUsername.innerText = userKey.toString();
+          this.matchDetails.innerText = userSubreddits.toString();
+          // You can return or perform actions on this user
+          break;
+        }
+      }
     }
   };
 }

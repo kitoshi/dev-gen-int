@@ -61,7 +61,7 @@ Devvit.addCustomPostType({
 
     const webView = useWebView<WebViewMessage, DevvitMessage>({
       url: 'page.html',
-      onMessage(message, webView) {
+      async onMessage(message, webView) {
         console.log('Received message:', message);
         switch (message.type) {
           case 'webViewReady':
@@ -74,6 +74,22 @@ Devvit.addCustomPostType({
               type: 'initialData',
               data: { username, subreddits, allUserData }
             });
+            break;
+          case 'matchUpdate':
+            console.log('Sending match update data:', message.data);
+            //split (username, friend) and store in redit as key value pair
+            const [user, friend] = (message.data as string)
+              .toString()
+              .split(',');
+            if (message.data !== null) {
+              await context.redis.hSet(`user_friends`, {
+                [user]: friend
+              });
+              await context.redis.set(
+                `counter_${context.postId}`,
+                message.data.toString()
+              );
+            }
             break;
         }
       },
