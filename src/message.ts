@@ -2,7 +2,7 @@ import { JSONValue } from '@devvit/public-api';
 
 /** Message from Devvit to the web view. */
 export type DevvitMessage = {
-  type: 'initialData';
+  type: 'initialData' | 'refreshData';
   data: {
     username: JSONValue;
     subreddits: JSONValue;

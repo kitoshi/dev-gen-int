@@ -1,4 +1,5 @@
 class App {
+  doneUsers = null;
   constructor() {
     this.card = document.querySelector('.card');
     this.usernameLabel = document.querySelector('.profile-data');
@@ -82,19 +83,18 @@ class App {
           data:
             this.usernameLabel.innerText + ',' + this.matchUsername.innerText
         });
+        shootConfetti(); // 🎉 Trigger confetti on match
       }
       this.card.style.transition =
         'transform 0.3s ease-out, opacity 0.5s ease-out';
       this.card.style.opacity = '0';
-      setTimeout(() => {
-        this.card.style.display = 'none'; // Hide after fade-out
-      }, 500);
     } else {
       this.card.style.transform = 'translateX(0)';
     }
 
     setTimeout(() => {
-      this.voteIndicator.style.opacity = '0';
+      this.card.style.pointerEvents = 'none'; // Disable interactions when hidden
+      this.card.style.transform = 'translateX(0)'; // Reset for next use
     }, 500);
   };
 
@@ -105,47 +105,64 @@ class App {
       this.output.replaceChildren(JSON.stringify(message, undefined, 2));
     }
     console.log(message.toString());
-
     if (message.type === 'initialData') {
       const { username, subreddits, allUserData, allUserMatches } =
         message.data;
-      console.log('Username:', username);
-      console.log('Subreddits:', subreddits);
-      console.log('All User Data:', allUserData);
-      console.log('All User Matches:', allUserMatches);
-      this.usernameLabel.innerText = username.toString();
+      this.username = username;
+      this.subreddits = subreddits;
+      this.allUserData = allUserData;
+      this.allUserMatches = allUserMatches;
+      switch (message.type) {
+        case 'initialData':
+          console.log('Username:', username);
+          console.log('Subreddits:', subreddits);
+          console.log('All User Data:', allUserData);
+          console.log('All User Matches:', allUserMatches);
+          this.usernameLabel.innerText = username.toString();
 
-      for (const user of allUserData) {
-        const userKey = user.field;
-        const userSubreddits = JSON.parse(user.value);
+          for (const user of allUserData) {
+            const userKey = user.field;
+            const userSubreddits = JSON.parse(user.value);
 
-        if (userKey !== username) {
-          for (const matchUser of allUserMatches) {
-            if (matchUser.value === userKey) {
-              console.log('Matched user:', userKey);
-
-              this.matchUsername.innerText = userKey.toString();
-              this.matchDetails.innerText = userSubreddits.toString();
-
-              this.fadeIn(this.card); // 🔥 Fade in the card
-
-              return;
+            if (userKey !== username) {
+              for (const matchUser of allUserMatches) {
+                this.matchUsername.innerText = userKey.toString();
+                this.matchDetails.innerText = userSubreddits.toString();
+              }
             }
           }
-        }
+          break;
+        case 'refreshData':
+          console.log('Username:', username);
+          console.log('Subreddits:', subreddits);
+          console.log('All User Data:', allUserData);
+          console.log('All User Matches:', allUserMatches);
+          this.usernameLabel.innerText = username.toString();
+
+          for (const user of allUserData) {
+            const userKey = user.field;
+            const userSubreddits = JSON.parse(user.value);
+
+            if (userKey !== username) {
+              for (const matchUser of allUserMatches) {
+                if (matchUser.value === userKey) {
+                  console.log('Matched user:', userKey);
+
+                  this.matchUsername.innerText = userKey.toString();
+                  this.matchDetails.innerText = userSubreddits.toString();
+
+                  fadeIn(this.card); // 🔥 Fade in the card
+
+                  return;
+                }
+              }
+            }
+          }
+        default:
+          break;
       }
     }
   };
-
-  // Fade-in effect for the card
-  fadeIn(element) {
-    element.style.opacity = '0';
-    element.style.display = 'block'; // Ensure it's visible before fading in
-    element.style.transition = 'opacity 0.5s ease-in-out';
-    setTimeout(() => {
-      element.style.opacity = '1';
-    }, 10);
-  }
 }
 
 function postWebViewMessage(msg) {

@@ -107,7 +107,7 @@ Devvit.addCustomPostType({
                 friend + '\n Set in redis user_friends'
               );
               webView.postMessage({
-                type: 'initialData',
+                type: 'refreshData',
                 data: { username, subreddits, allUserData, allUserMatches }
               });
               break;
