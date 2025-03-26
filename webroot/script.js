@@ -75,7 +75,7 @@ class App {
       if (this.currentX > 0) {
         console.log(
           'Posting Data:',
-          this.matchUsername.innerText + ',' + this.usernameLabel.innerText
+          this.usernameLabel.innerText + ',' + this.matchUsername.innerText
         );
         postWebViewMessage({
           type: 'matchUpdate',
@@ -107,30 +107,45 @@ class App {
     console.log(message.toString());
 
     if (message.type === 'initialData') {
-      const { username, subreddits, allUserData } = message.data;
+      const { username, subreddits, allUserData, allUserMatches } =
+        message.data;
       console.log('Username:', username);
       console.log('Subreddits:', subreddits);
       console.log('All User Data:', allUserData);
+      console.log('All User Matches:', allUserMatches);
       this.usernameLabel.innerText = username.toString();
+
       for (const user of allUserData) {
-        // Parse the value to get the list of subreddits or other data
         const userKey = user.field;
         const userSubreddits = JSON.parse(user.value);
-        // If the current userKey (username) does not match, log or handle it
+
         if (userKey !== username) {
-          console.log('First non-matching user:', userKey);
-          console.log(
-            'Subreddits or data associated with this user:',
-            userSubreddits
-          );
-          this.matchUsername.innerText = userKey.toString();
-          this.matchDetails.innerText = userSubreddits.toString();
-          // You can return or perform actions on this user
-          break;
+          for (const matchUser of allUserMatches) {
+            if (matchUser.value === userKey) {
+              console.log('Matched user:', userKey);
+
+              this.matchUsername.innerText = userKey.toString();
+              this.matchDetails.innerText = userSubreddits.toString();
+
+              this.fadeIn(this.card); // 🔥 Fade in the card
+
+              return;
+            }
+          }
         }
       }
     }
   };
+
+  // Fade-in effect for the card
+  fadeIn(element) {
+    element.style.opacity = '0';
+    element.style.display = 'block'; // Ensure it's visible before fading in
+    element.style.transition = 'opacity 0.5s ease-in-out';
+    setTimeout(() => {
+      element.style.opacity = '1';
+    }, 10);
+  }
 }
 
 function postWebViewMessage(msg) {
