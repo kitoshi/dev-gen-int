@@ -115,7 +115,7 @@ class App {
     this.dragging = false;
     this.card.style.transition = 'transform 0.3s ease-out';
     this.voteIndicator.style.transition = 'opacity 0.5s ease-out';
-
+    fadeOut(this.voteIndicator);
     if (Math.abs(this.currentX) > 100) {
       if (this.currentX > 0) {
         console.log(
@@ -146,13 +146,27 @@ class App {
     createNewMatchCard(this.cardContainer);
     this.#selectDOM();
     let matches = [];
+
+    // Clear any previous match details
+    this.matchUsername.innerHTML = '';
+
     for (const user of this.allUserMatches) {
       if (user.field !== this.username && user.value.includes(this.username)) {
-        matches.push(user.field);
+        // Create a hyperlink for each match
+        const matchLink = document.createElement('a');
+        matchLink.href = `https://www.reddit.com/user/${user.field}`;
+        matchLink.innerText = `${user.field}`; // Display the user's name as text
+
+        // Optionally, add a break or space between each match
+        const lineBreak = document.createElement('br');
+
+        // Append the match link and line break to the match list
+        this.matchUsername.appendChild(matchLink);
+        this.matchUsername.appendChild(lineBreak);
       }
     }
+
     console.log('Matches:', matches);
-    this.matchUsername.innerText = matches;
     fadeIn(this.card);
     shootConfetti();
   };

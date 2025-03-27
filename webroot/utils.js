@@ -44,11 +44,7 @@ export function createNewCard(cardContainer) {
 
   const detailsWrapper = document.createElement('div');
 
-  const profileData = document.createElement('p');
-  profileData.classList.add('profile-data');
-  profileData.innerText = 'Profile Details Here';
-
-  const matchUsername = document.createElement('p');
+  const matchUsername = document.createElement('h2');
   matchUsername.classList.add('match-username');
 
   const matchDetails = document.createElement('p');
@@ -58,7 +54,6 @@ export function createNewCard(cardContainer) {
   back.innerText = 'Back of card';
 
   // Append elements to card
-  detailsWrapper.appendChild(profileData);
   detailsWrapper.appendChild(matchUsername);
   detailsWrapper.appendChild(matchDetails);
 
@@ -70,6 +65,7 @@ export function createNewCard(cardContainer) {
   buttons.classList.add('buttons');
   //add flip button
   const flipButton = document.createElement('button');
+  flipButton.classList.add('button');
   flipButton.id = 'flip';
   flipButton.innerText = 'Flip';
   buttons.appendChild(flipButton);
