@@ -53,6 +53,7 @@ class App {
       postWebViewMessage({ type: 'webViewReady' });
     });
   }
+
   #onCardClick = () => {
     console.log('Card clicked! Flipping...');
     if (this.card.querySelector('.back').style.display === 'block') {
@@ -92,6 +93,9 @@ class App {
     this.matchDetails = document.querySelector('.match-details');
     this.cardContainer = document.querySelector('.card-container');
     this.card = document.querySelector('.card');
+    this.startX = 0;
+    this.currentX = 0;
+    this.dragging = false;
   };
   #onPointerDown = (event) => {
     this.startX = event.clientX;
@@ -154,7 +158,6 @@ class App {
   #showMatches = () => {
     createNewMatchCard(this.cardContainer);
     this.#selectDOM();
-    this.#addEventListeners();
     let matches = [];
     for (const user of this.allUserMatches) {
       if (user.field !== this.username && user.value.includes(this.username)) {
@@ -165,6 +168,10 @@ class App {
     this.matchUsername.innerText = matches;
     fadeIn(this.card);
     shootConfetti();
+  };
+
+  #hideButtons = () => {
+    document.querySelector('.buttons')?.remove();
   };
 
   #onMessage = (ev) => {
@@ -205,11 +212,13 @@ class App {
 
               return;
             }
+
             console.log('No more users to match in InitialData');
           }
           break;
         case 'refreshData':
           removeOldCard(this.cardContainer);
+
           console.log('Entered refreshData');
           console.log('Username:', this.username);
           console.log('Subreddits:', this.subreddits);
@@ -243,6 +252,7 @@ class App {
           }
 
           console.log('No more users to match in RefreshData');
+          this.#hideButtons();
           return this.#showMatches();
 
         default:

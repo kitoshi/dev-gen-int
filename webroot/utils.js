@@ -53,6 +53,9 @@ export function createNewCard(cardContainer) {
 
   const matchDetails = document.createElement('p');
   matchDetails.classList.add('match-details');
+  const back = document.createElement('div');
+  back.classList.add('back');
+  back.innerText = 'Back of card';
 
   // Append elements to card
   detailsWrapper.appendChild(profileData);
@@ -60,7 +63,17 @@ export function createNewCard(cardContainer) {
   detailsWrapper.appendChild(matchDetails);
 
   card.appendChild(front);
-  card.appendChild(detailsWrapper);
+  front.appendChild(detailsWrapper);
+  card.appendChild(back);
+
+  const buttons = document.createElement('div');
+  buttons.classList.add('buttons');
+  //add flip button
+  const flipButton = document.createElement('button');
+  flipButton.id = 'flip';
+  flipButton.innerText = 'Flip';
+  buttons.appendChild(flipButton);
+  card.appendChild(buttons);
   card.style.display = 'none';
   // Append the card to the container
   cardContainer.appendChild(card);
@@ -72,9 +85,6 @@ export function createNewMatchCard(cardContainer) {
 
   const card = document.createElement('div');
   card.classList.add('card');
-
-  const front = document.createElement('div');
-  front.classList.add('front');
 
   const detailsWrapper = document.createElement('div');
 
@@ -92,9 +102,8 @@ export function createNewMatchCard(cardContainer) {
   detailsWrapper.appendChild(profileData);
   detailsWrapper.appendChild(matchUsername);
   detailsWrapper.appendChild(matchDetails);
-
-  card.appendChild(front);
   card.appendChild(detailsWrapper);
+
   card.style.display = 'none';
   // Append the card to the container
   cardContainer.appendChild(card);
