@@ -176,29 +176,30 @@ Devvit.addCustomPostType({
           <text size='xlarge' weight='bold'>
             Frienddit
           </text>
-          <spacer />
           <vstack alignment='start middle'>
             <hstack>
-              <text size='medium'>Username:</text>
+              <text size='medium'>Your Username: &nbsp;</text>
               <text size='medium' weight='bold'>
                 {username ? username : 'unknown'}
               </text>
             </hstack>
             <hstack>
-              <text size='medium'>Subreddits:</text>
+              <text size='medium'>Your Subreddits: &nbsp;</text>
               <text size='medium' weight='bold'>
                 {subreddits ? subreddits.toString() : 'None'}
               </text>
             </hstack>
             <hstack>
-              <text size='medium'>Current Users:</text>
+              <text size='medium'>Current Users: &nbsp;</text>
               <text size='medium' weight='bold'>
                 {Array.isArray(allUserData) ? allUserData.length : 'None'}
               </text>
             </hstack>
           </vstack>
           <spacer />
-          <button onPress={() => webView.mount()}>Launch App</button>
+          <button onPress={() => webView.mount()} appearance='primary'>
+            🚀 Launch App
+          </button>
         </vstack>
       </vstack>
     );
