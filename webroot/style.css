@@ -25,8 +25,7 @@ body {
 .card.flipped {
   transform: rotateY(180deg);
 }
-.card .front,
-.card .back {
+.card {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -34,9 +33,7 @@ body {
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-.card .front {
-  background: url('profile.jpg') center/cover;
-}
+
 .card .back {
   background: white;
   display: flex;
@@ -51,6 +48,10 @@ body {
 .match-details {
   white-space: pre-wrap; /* Ensures text wraps */
   word-wrap: break-word; /* Breaks long words */
+}
+
+.profile-data {
+  display: 'none;
 }
 
 .confetti {

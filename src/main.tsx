@@ -36,7 +36,7 @@ Devvit.addCustomPostType({
       }
 
       const subredditList = [...subredditSet]; //
-
+      console.log('Initial User Subreddits:', subredditList);
       // Store in Redis
       await context.redis.hSet(`user_subreddits`, {
         [username]: JSON.stringify(subredditList)
@@ -92,26 +92,67 @@ Devvit.addCustomPostType({
             break;
           case 'matchUpdate':
             console.log('Sending match update data:', message.data);
-            //split (username, friend) and store in redit as key value pair
-            const [user, friend] = (message.data as string)
-              .toString()
-              .split(',');
-            if (message.data !== null) {
-              await context.redis.hSet(`user_friends`, {
-                [user]: friend
+
+            // Split the incoming message to extract the user and friend
+            const dataString = (message.data as string).toString();
+            const [user, newFriend] = dataString.split(',');
+
+            if (user && newFriend) {
+              // Get the existing friends list from Redis, or default to an empty string if not found
+              const existingFriends = await context.redis.hGet(
+                'user_friends',
+                user
+              );
+
+              // Initialize friends array
+              let friendsArray = [];
+
+              // If data exists in Redis, process it
+              if (existingFriends) {
+                // If the data is a plain comma-separated string, convert it to an array
+                if (existingFriends.includes(',')) {
+                  friendsArray = existingFriends.split(',');
+                } else {
+                  // If it looks like a JSON array, parse it
+                  try {
+                    friendsArray = JSON.parse(existingFriends);
+                  } catch (error) {
+                    console.error(
+                      'Error parsing existing friends list:',
+                      error
+                    );
+                    friendsArray = [];
+                  }
+                }
+              }
+
+              // Append the new friend if not already present
+              if (!friendsArray.includes(newFriend)) {
+                friendsArray.push(newFriend);
+              }
+
+              // Store the updated list in Redis as a JSON string
+              await context.redis.hSet('user_friends', {
+                [user]: JSON.stringify(friendsArray)
               });
+
               console.log(
                 'User:',
                 user,
-                'Friend:',
-                friend + '\n Set in redis user_friends'
+                'Updated Friends List:',
+                friendsArray,
+                '\nUpdated in Redis user_friends'
               );
+
+              // Send the updated data to refresh the UI
               webView.postMessage({
                 type: 'refreshData',
                 data: { username, subreddits, allUserData, allUserMatches }
               });
-              break;
             }
+            break;
+
+          default:
             break;
         }
       },

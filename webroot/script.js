@@ -1,10 +1,22 @@
+import {
+  createNewCard,
+  fadeIn,
+  fadeOut,
+  shootConfetti,
+  removeOldCard
+} from './utils.js';
+
 class App {
-  doneUsers = null;
   constructor() {
+    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || [];
+
     this.card = document.querySelector('.card');
     this.usernameLabel = document.querySelector('.profile-data');
     this.matchUsername = document.querySelector('.match-username');
     this.matchDetails = document.querySelector('.match-details');
+    this.cardContainer = document.querySelector('.card-container');
+    this.cardFront = document.querySelector('.front');
+    this.cardBack = document.querySelector('.back');
     this.output = document.querySelector('#messageOutput');
     this.startX = 0;
     this.currentX = 0;
@@ -33,13 +45,31 @@ class App {
     this.card.addEventListener('pointermove', this.#onPointerMove);
     this.card.addEventListener('pointerup', this.#onPointerUp);
     this.card.addEventListener('pointerleave', this.#onPointerUp);
+    this.card.addEventListener('click', this.#onCardClick);
 
     addEventListener('message', this.#onMessage);
     addEventListener('load', () => {
       postWebViewMessage({ type: 'webViewReady' });
     });
   }
+  #onCardClick = () => {
+    console.log('Card clicked! Fading out...');
+  };
 
+  #addEventListeners = () => {
+    this.card.addEventListener('pointerdown', this.#onPointerDown);
+    this.card.addEventListener('pointermove', this.#onPointerMove);
+    this.card.addEventListener('pointerup', this.#onPointerUp);
+    this.card.addEventListener('pointerleave', this.#onPointerUp);
+    this.card.addEventListener('click', this.#onCardClick);
+  };
+  #selectDOM = () => {
+    this.usernameLabel = document.querySelector('.profile-data');
+    this.matchUsername = document.querySelector('.match-username');
+    this.matchDetails = document.querySelector('.match-details');
+    this.cardContainer = document.querySelector('.card-container');
+    this.card = document.querySelector('.card');
+  };
   #onPointerDown = (event) => {
     this.startX = event.clientX;
     this.dragging = true;
@@ -83,19 +113,13 @@ class App {
           data:
             this.usernameLabel.innerText + ',' + this.matchUsername.innerText
         });
+        fadeOut(this.voteIndicator);
+        fadeOut(this.card);
         shootConfetti(); // 🎉 Trigger confetti on match
       }
-      this.card.style.transition =
-        'transform 0.3s ease-out, opacity 0.5s ease-out';
-      this.card.style.opacity = '0';
     } else {
       this.card.style.transform = 'translateX(0)';
     }
-
-    setTimeout(() => {
-      this.card.style.pointerEvents = 'none'; // Disable interactions when hidden
-      this.card.style.transform = 'translateX(0)'; // Reset for next use
-    }, 500);
   };
 
   #onMessage = (ev) => {
@@ -104,59 +128,86 @@ class App {
     if (this.output) {
       this.output.replaceChildren(JSON.stringify(message, undefined, 2));
     }
-    console.log(message.toString());
-    if (message.type === 'initialData') {
+    console.log(message.type.toString());
+    if (message.type === 'initialData' || message.type === 'refreshData') {
       const { username, subreddits, allUserData, allUserMatches } =
         message.data;
-      this.username = username;
-      this.subreddits = subreddits;
-      this.allUserData = allUserData;
-      this.allUserMatches = allUserMatches;
+      this.usernameLabel.innerText = username.toString();
+
       switch (message.type) {
         case 'initialData':
           console.log('Username:', username);
           console.log('Subreddits:', subreddits);
           console.log('All User Data:', allUserData);
           console.log('All User Matches:', allUserMatches);
-          this.usernameLabel.innerText = username.toString();
-
+          fadeIn(this.card);
           for (const user of allUserData) {
             const userKey = user.field;
             const userSubreddits = JSON.parse(user.value);
-
+            //filter out this user
             if (userKey !== username) {
+              //filter out already matched users
               for (const matchUser of allUserMatches) {
-                this.matchUsername.innerText = userKey.toString();
-                this.matchDetails.innerText = userSubreddits.toString();
+                if (!matchUser.value.includes(userKey)) {
+                  this.matchUsername.innerText = userKey.toString();
+                  this.matchDetails.innerText = userSubreddits.toString();
+                  return;
+                }
+                console.log('No more users to match');
               }
             }
           }
           break;
         case 'refreshData':
+          console.log('entered refreshData');
           console.log('Username:', username);
           console.log('Subreddits:', subreddits);
           console.log('All User Data:', allUserData);
           console.log('All User Matches:', allUserMatches);
-          this.usernameLabel.innerText = username.toString();
 
           for (const user of allUserData) {
             const userKey = user.field;
             const userSubreddits = JSON.parse(user.value);
+            if (!this.doneUsers.includes(userKey)) {
+              if (userKey !== username) {
+                //matchUser is key value is array of users
+                for (const matchUser of allUserMatches) {
+                  for (const matchUserKey of matchUser.value) {
+                    if (matchUserKey == localStorage)
+                      removeOldCard(this.cardContainer);
+                    createNewCard(this.cardContainer);
+                    this.#selectDOM();
+                    this.#addEventListeners();
+                    if (matchUserKey === username) {
+                      this.doneUsers.push(matchUserKey);
+                      localStorage.setItem(
+                        'doneUsers',
+                        JSON.stringify(this.doneUsers)
+                      );
+                      console.log('Matched user:', userKey);
 
-            if (userKey !== username) {
-              for (const matchUser of allUserMatches) {
-                if (matchUser.value === userKey) {
-                  console.log('Matched user:', userKey);
+                      this.output = document.querySelector('#messageOutput');
 
-                  this.matchUsername.innerText = userKey.toString();
-                  this.matchDetails.innerText = userSubreddits.toString();
+                      this.matchUsername.innerText = userKey.toString();
+                      this.matchDetails.innerText = userSubreddits.toString();
 
-                  fadeIn(this.card); // 🔥 Fade in the card
+                      console.log('fade in');
+                      fadeIn(this.card);
 
-                  return;
+                      return;
+                    } else {
+                      console.log('No more users to match');
+                      this.matchUsername.innerText = userKey.toString();
+                      this.matchDetails.innerText = userSubreddits.toString();
+                      fadeIn(this.card);
+
+                      return;
+                    }
+                  }
                 }
               }
             }
+            console.log('No more users to match');
           }
         default:
           break;
@@ -165,6 +216,9 @@ class App {
   };
 }
 
+document.getElementById('clearMatches').addEventListener('click', () => {
+  localStorage.removeItem('doneUsers');
+});
 function postWebViewMessage(msg) {
   parent.postMessage(msg, '*');
 }
