@@ -33,19 +33,6 @@ class App {
     this.voteIndicator.classList.add('vote-indicator');
     this.card.parentElement.appendChild(this.voteIndicator);
 
-    // Style vote indicator
-    Object.assign(this.voteIndicator.style, {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      fontSize: '2rem',
-      fontWeight: 'bold',
-      opacity: '0',
-      transition: 'opacity 0.2s ease-out',
-      pointerEvents: 'none'
-    });
-
     // Drag event listeners
     this.#addEventListeners();
     addEventListener('message', this.#onMessage);

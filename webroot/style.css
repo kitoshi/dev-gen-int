@@ -59,6 +59,19 @@ body {
   padding: 10px;
   background: white;
 }
+
+.vote-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+  pointer-events: none;
+}
+
 @keyframes fall {
   0% {
     transform: translateY(-100px) rotate(0deg);
