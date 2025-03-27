@@ -20,11 +20,9 @@ body {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.6s;
+  transition: transform 0.6s ease-in-out;
 }
-.card.flipped {
-  transform: rotateY(180deg);
-}
+
 .card {
   position: absolute;
   width: 100%;
@@ -36,10 +34,9 @@ body {
 
 .card .back {
   background: white;
-  display: flex;
+  display: none; /* Initially hide the back */
   justify-content: center;
   align-items: center;
-  transform: rotateY(180deg);
   padding: 20px;
   text-align: center;
 }
@@ -48,10 +45,6 @@ body {
 .match-details {
   white-space: pre-wrap; /* Ensures text wraps */
   word-wrap: break-word; /* Breaks long words */
-}
-
-.profile-data {
-  display: 'none;
 }
 
 .confetti {

@@ -151,7 +151,20 @@ Devvit.addCustomPostType({
               });
             }
             break;
-
+          case 'resetData':
+            // Split the incoming message to extract the user and friend
+            const resetString = (message.data as string).toString();
+            const [resetUser, resetTarget] = resetString.split(',');
+            const numFieldsRemoved = await context.redis.hDel(
+              'user_subreddits',
+              [resetUser]
+            );
+            console.log(
+              'Resetting data: ',
+              resetUser,
+              resetTarget,
+              numFieldsRemoved
+            );
           default:
             break;
         }

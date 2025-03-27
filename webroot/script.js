@@ -41,19 +41,28 @@ class App {
     });
 
     // Drag event listeners
-    this.card.addEventListener('pointerdown', this.#onPointerDown);
-    this.card.addEventListener('pointermove', this.#onPointerMove);
-    this.card.addEventListener('pointerup', this.#onPointerUp);
-    this.card.addEventListener('pointerleave', this.#onPointerUp);
-    this.card.addEventListener('click', this.#onCardClick);
-
+    this.#addEventListeners();
     addEventListener('message', this.#onMessage);
     addEventListener('load', () => {
       postWebViewMessage({ type: 'webViewReady' });
     });
   }
   #onCardClick = () => {
-    console.log('Card clicked! Fading out...');
+    console.log('Card clicked! Flipping...');
+    if (this.card.querySelector('.back').style.display === 'block') {
+      this.card.querySelector('.back').style.display = 'none'; // Hide the back
+      this.card.querySelector('.front').style.display = 'block'; // Show the front
+      return;
+    }
+    this.card.querySelector('.front').style.display = 'none'; // Hide the front
+    this.card.querySelector('.back').style.display = 'block'; // Show the back
+  };
+  #onResetClick = () => {
+    postWebViewMessage({
+      type: 'resetData',
+      data: this.usernameLabel.innerText + ',' + ''
+    });
+    console.log('Resetting...');
   };
 
   #addEventListeners = () => {
@@ -61,7 +70,15 @@ class App {
     this.card.addEventListener('pointermove', this.#onPointerMove);
     this.card.addEventListener('pointerup', this.#onPointerUp);
     this.card.addEventListener('pointerleave', this.#onPointerUp);
-    this.card.addEventListener('click', this.#onCardClick);
+    document.getElementById('clearMatches').addEventListener('click', () => {
+      localStorage.removeItem('doneUsers');
+    });
+    document.getElementById('flip').addEventListener('click', () => {
+      this.#onCardClick();
+    });
+    document.getElementById('reset').addEventListener('click', () => {
+      this.#onResetClick();
+    });
   };
   #selectDOM = () => {
     this.usernameLabel = document.querySelector('.profile-data');
@@ -108,11 +125,13 @@ class App {
           'Posting Data:',
           this.usernameLabel.innerText + ',' + this.matchUsername.innerText
         );
-        postWebViewMessage({
-          type: 'matchUpdate',
-          data:
-            this.usernameLabel.innerText + ',' + this.matchUsername.innerText
-        });
+        if (this.matchUsername.innerText && this.usernameLabel.innerText) {
+          postWebViewMessage({
+            type: 'matchUpdate',
+            data:
+              this.usernameLabel.innerText + ',' + this.matchUsername.innerText
+          });
+        }
         fadeOut(this.voteIndicator);
         fadeOut(this.card);
         shootConfetti(); // 🎉 Trigger confetti on match
@@ -216,9 +235,6 @@ class App {
   };
 }
 
-document.getElementById('clearMatches').addEventListener('click', () => {
-  localStorage.removeItem('doneUsers');
-});
 function postWebViewMessage(msg) {
   parent.postMessage(msg, '*');
 }

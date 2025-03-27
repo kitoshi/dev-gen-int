@@ -9,20 +9,26 @@
 </head>
 
 <body>
-
   <div class="card-container">
     <div class="card">
-      <div>
-        <h2 class="front">Do you upvote or downvote this user?</h2>
+      <div class="front">
+        <h2>Do you upvote or downvote this user?</h2>
         <p class="profile-data"></p>
         <p class="match-username"></p>
         <p class="match-details"></p>
-        <h2 class="back">back of the card</h2>
-
+      </div>
+      <div class="back">
+        <h2>Back of the card</h2>
+        <p>Additional details or actions can go here.</p>
+      </div>
+      <div class="buttons">
+        <button id="flip">Flip</button>
+        <button id="clearMatches">Clear Matches</button>
+        <button id="reset">Reset Friends</button>
       </div>
     </div>
   </div>
-  <button id="clearMatches">Clear Matches</button>
+
 
   <script type="module" src="script.js"></script>
 </body>

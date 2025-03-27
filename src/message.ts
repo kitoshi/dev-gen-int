@@ -17,6 +17,10 @@ export type WebViewMessage =
   | {
       data: JSONValue;
       type: 'matchUpdate';
+    }
+  | {
+      type: 'resetData';
+      data: JSONValue;
     };
 
 /**
