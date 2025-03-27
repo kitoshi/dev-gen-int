@@ -104,34 +104,26 @@ Devvit.addCustomPostType({
                 user
               );
 
-              // Initialize friends array
+              // Always treat Redis data as JSON
               let friendsArray = [];
-
-              // If data exists in Redis, process it
               if (existingFriends) {
-                // If the data is a plain comma-separated string, convert it to an array
-                if (existingFriends.includes(',')) {
-                  friendsArray = existingFriends.split(',');
-                } else {
-                  // If it looks like a JSON array, parse it
-                  try {
-                    friendsArray = JSON.parse(existingFriends);
-                  } catch (error) {
-                    console.error(
-                      'Error parsing existing friends list:',
-                      error
-                    );
-                    friendsArray = [];
+                try {
+                  friendsArray = JSON.parse(existingFriends);
+                  if (!Array.isArray(friendsArray)) {
+                    throw new Error('Parsed value is not an array');
                   }
+                } catch (error) {
+                  console.error('Error parsing existing friends list:', error);
+                  friendsArray = [];
                 }
               }
 
-              // Append the new friend if not already present
+              // Append new friend if not already present
               if (!friendsArray.includes(newFriend)) {
                 friendsArray.push(newFriend);
               }
 
-              // Store the updated list in Redis as a JSON string
+              // Store as JSON string
               await context.redis.hSet('user_friends', {
                 [user]: JSON.stringify(friendsArray)
               });
@@ -159,6 +151,10 @@ Devvit.addCustomPostType({
               'user_subreddits',
               [resetUser]
             );
+            const numRemoved = await context.redis.hDel('user_friends', [
+              resetUser
+            ]);
+            console.log(numRemoved);
             console.log(
               'Resetting data: ',
               resetUser,
@@ -178,7 +174,7 @@ Devvit.addCustomPostType({
       <vstack grow padding='small'>
         <vstack grow alignment='middle center'>
           <text size='xlarge' weight='bold'>
-            User Subreddit Tracker
+            Frienddit
           </text>
           <spacer />
           <vstack alignment='start middle'>
@@ -195,9 +191,9 @@ Devvit.addCustomPostType({
               </text>
             </hstack>
             <hstack>
-              <text size='medium'>All Users:</text>
+              <text size='medium'>Current Users:</text>
               <text size='medium' weight='bold'>
-                {allUserData ? allUserData.toString() : 'None'}
+                {Array.isArray(allUserData) ? allUserData.length : 'None'}
               </text>
             </hstack>
           </vstack>

@@ -3,13 +3,19 @@ import {
   fadeIn,
   fadeOut,
   shootConfetti,
-  removeOldCard
+  removeOldCard,
+  createNewMatchCard
 } from './utils.js';
 
 class App {
+  username;
+  subreddits;
+  allUserData;
+  allUserMatches;
+  doneUsers = [];
+  userKey;
+  userSubreddits;
   constructor() {
-    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || [];
-
     this.card = document.querySelector('.card');
     this.usernameLabel = document.querySelector('.profile-data');
     this.matchUsername = document.querySelector('.match-username');
@@ -60,7 +66,7 @@ class App {
   #onResetClick = () => {
     postWebViewMessage({
       type: 'resetData',
-      data: this.usernameLabel.innerText + ',' + ''
+      data: this.username + ',' + ''
     });
     console.log('Resetting...');
   };
@@ -70,13 +76,13 @@ class App {
     this.card.addEventListener('pointermove', this.#onPointerMove);
     this.card.addEventListener('pointerup', this.#onPointerUp);
     this.card.addEventListener('pointerleave', this.#onPointerUp);
-    document.getElementById('clearMatches').addEventListener('click', () => {
+    document.getElementById('clearMatches')?.addEventListener('click', () => {
       localStorage.removeItem('doneUsers');
     });
-    document.getElementById('flip').addEventListener('click', () => {
+    document.getElementById('flip')?.addEventListener('click', () => {
       this.#onCardClick();
     });
-    document.getElementById('reset').addEventListener('click', () => {
+    document.getElementById('reset')?.addEventListener('click', () => {
       this.#onResetClick();
     });
   };
@@ -123,22 +129,42 @@ class App {
       if (this.currentX > 0) {
         console.log(
           'Posting Data:',
-          this.usernameLabel.innerText + ',' + this.matchUsername.innerText
+          this.username.toString() + ',' + this.userKey.toString()
         );
-        if (this.matchUsername.innerText && this.usernameLabel.innerText) {
+        if (this.username && this.userKey) {
           postWebViewMessage({
             type: 'matchUpdate',
-            data:
-              this.usernameLabel.innerText + ',' + this.matchUsername.innerText
+            data: this.username.toString() + ',' + this.userKey.toString()
           });
         }
         fadeOut(this.voteIndicator);
         fadeOut(this.card);
-        shootConfetti(); // 🎉 Trigger confetti on match
       }
     } else {
       this.card.style.transform = 'translateX(0)';
     }
+  };
+
+  #setLocalStorage = (key) => {
+    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || [];
+    this.doneUsers.push(key);
+    localStorage.setItem('doneUsers', JSON.stringify(this.doneUsers));
+  };
+
+  #showMatches = () => {
+    createNewMatchCard(this.cardContainer);
+    this.#selectDOM();
+    this.#addEventListeners();
+    let matches = [];
+    for (const user of this.allUserMatches) {
+      if (user.field !== this.username && user.value.includes(this.username)) {
+        matches.push(user.field);
+      }
+    }
+    console.log('Matches:', matches);
+    this.matchUsername.innerText = matches;
+    fadeIn(this.card);
+    shootConfetti();
   };
 
   #onMessage = (ev) => {
@@ -151,83 +177,74 @@ class App {
     if (message.type === 'initialData' || message.type === 'refreshData') {
       const { username, subreddits, allUserData, allUserMatches } =
         message.data;
-      this.usernameLabel.innerText = username.toString();
-
+      this.username = username;
+      this.subreddits = subreddits;
+      this.allUserData = allUserData;
+      this.allUserMatches = allUserMatches;
       switch (message.type) {
         case 'initialData':
-          console.log('Username:', username);
-          console.log('Subreddits:', subreddits);
-          console.log('All User Data:', allUserData);
-          console.log('All User Matches:', allUserMatches);
+          console.log('Entered initialData');
+          console.log('Username:', this.username);
+          console.log('Subreddits:', this.subreddits);
+          console.log('All User Data:', this.allUserData);
+          console.log('All User Matches:', this.allUserMatches);
+          console.log('Done Users:', this.doneUsers);
           fadeIn(this.card);
-          for (const user of allUserData) {
-            const userKey = user.field;
-            const userSubreddits = JSON.parse(user.value);
+          localStorage.setItem('doneUsers', '[]');
+          for (const user of this.allUserData) {
+            this.userKey = user.field;
+            this.userSubreddits = JSON.parse(user.value);
             //filter out this user
-            if (userKey !== username) {
+            if (this.userKey !== this.username) {
               //filter out already matched users
-              for (const matchUser of allUserMatches) {
-                if (!matchUser.value.includes(userKey)) {
-                  this.matchUsername.innerText = userKey.toString();
-                  this.matchDetails.innerText = userSubreddits.toString();
-                  return;
-                }
-                console.log('No more users to match');
-              }
+
+              console.log('Current Match User:', this.userKey);
+              this.matchUsername.innerText = this.userKey.toString();
+              this.matchDetails.innerText = this.userSubreddits.toString();
+              this.#setLocalStorage(this.userKey);
+
+              return;
             }
+            console.log('No more users to match in InitialData');
           }
           break;
         case 'refreshData':
-          console.log('entered refreshData');
-          console.log('Username:', username);
-          console.log('Subreddits:', subreddits);
-          console.log('All User Data:', allUserData);
-          console.log('All User Matches:', allUserMatches);
-
-          for (const user of allUserData) {
-            const userKey = user.field;
-            const userSubreddits = JSON.parse(user.value);
-            if (!this.doneUsers.includes(userKey)) {
-              if (userKey !== username) {
-                //matchUser is key value is array of users
-                for (const matchUser of allUserMatches) {
-                  for (const matchUserKey of matchUser.value) {
-                    if (matchUserKey == localStorage)
-                      removeOldCard(this.cardContainer);
-                    createNewCard(this.cardContainer);
-                    this.#selectDOM();
-                    this.#addEventListeners();
-                    if (matchUserKey === username) {
-                      this.doneUsers.push(matchUserKey);
-                      localStorage.setItem(
-                        'doneUsers',
-                        JSON.stringify(this.doneUsers)
-                      );
-                      console.log('Matched user:', userKey);
-
-                      this.output = document.querySelector('#messageOutput');
-
-                      this.matchUsername.innerText = userKey.toString();
-                      this.matchDetails.innerText = userSubreddits.toString();
-
-                      console.log('fade in');
-                      fadeIn(this.card);
-
-                      return;
-                    } else {
-                      console.log('No more users to match');
-                      this.matchUsername.innerText = userKey.toString();
-                      this.matchDetails.innerText = userSubreddits.toString();
-                      fadeIn(this.card);
-
-                      return;
-                    }
-                  }
-                }
-              }
+          removeOldCard(this.cardContainer);
+          console.log('Entered refreshData');
+          console.log('Username:', this.username);
+          console.log('Subreddits:', this.subreddits);
+          console.log('All User Data:', this.allUserData);
+          console.log('All User Matches:', this.allUserMatches);
+          console.log('Done Users:', this.doneUsers);
+          for (const user of this.allUserData) {
+            this.userKey = user.field;
+            this.userSubreddits = JSON.parse(user.value);
+            //done users is an array, if userKey is not in doneUsers array
+            console.log('Current iteration User:', this.userKey);
+            if (this.userKey == this.username) {
+              continue;
             }
-            console.log('No more users to match');
+            if (this.doneUsers?.includes(this.userKey)) {
+              continue;
+            }
+            //matchUser is key value is array of users
+            createNewCard(this.cardContainer);
+            this.#selectDOM();
+            this.#addEventListeners();
+            this.#setLocalStorage(this.userKey);
+
+            this.output = document.querySelector('#messageOutput');
+
+            this.matchUsername.innerText = this.userKey.toString();
+            this.matchDetails.innerText = this.userSubreddits.toString();
+            fadeIn(this.card);
+
+            return;
           }
+
+          console.log('No more users to match in RefreshData');
+          return this.#showMatches();
+
         default:
           break;
       }

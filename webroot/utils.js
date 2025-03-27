@@ -67,6 +67,40 @@ export function createNewCard(cardContainer) {
   return card;
 }
 
+export function createNewMatchCard(cardContainer) {
+  console.log('Creating new card...');
+
+  const card = document.createElement('div');
+  card.classList.add('card');
+
+  const front = document.createElement('div');
+  front.classList.add('front');
+
+  const detailsWrapper = document.createElement('div');
+
+  const profileData = document.createElement('p');
+  profileData.classList.add('profile-data');
+  profileData.innerText = 'Your Matches!';
+
+  const matchUsername = document.createElement('p');
+  matchUsername.classList.add('match-username');
+
+  const matchDetails = document.createElement('p');
+  matchDetails.classList.add('match-details');
+
+  // Append elements to card
+  detailsWrapper.appendChild(profileData);
+  detailsWrapper.appendChild(matchUsername);
+  detailsWrapper.appendChild(matchDetails);
+
+  card.appendChild(front);
+  card.appendChild(detailsWrapper);
+  card.style.display = 'none';
+  // Append the card to the container
+  cardContainer.appendChild(card);
+  return card;
+}
+
 export function removeOldCard() {
   console.log('Removing old card...');
   const card = document.querySelector('.card');
