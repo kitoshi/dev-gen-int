@@ -55,7 +55,7 @@ export function createNewCard(cardContainer) {
 
   // Append elements to card
   detailsWrapper.appendChild(matchUsername);
-  detailsWrapper.appendChild(matchDetails);
+  back.appendChild(matchDetails);
 
   card.appendChild(front);
   front.appendChild(detailsWrapper);

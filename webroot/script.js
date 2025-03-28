@@ -82,6 +82,8 @@ class App {
     this.cardContainer = document.querySelector('.card-container');
     this.snooImage = document.querySelector('.snoo');
     this.card = document.querySelector('.card');
+    this.cardFront = document.querySelector('.front');
+    this.cardBack = document.querySelector('.back');
     this.startX = 0;
     this.currentX = 0;
     this.dragging = false;
@@ -139,7 +141,7 @@ class App {
   };
 
   #setLocalStorage = (key) => {
-    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || [];
+    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || '[]';
     this.doneUsers.push(key);
     localStorage.setItem('doneUsers', JSON.stringify(this.doneUsers));
   };
@@ -212,7 +214,6 @@ class App {
           console.log('All User Matches:', this.allUserMatches);
           console.log('Done Users:', this.doneUsers);
           fadeIn(this.card);
-          localStorage.setItem('doneUsers', '[]');
           for (const user of this.allUserData) {
             this.userKey = user.field;
             this.userSubreddits = JSON.parse(user.value);

@@ -91,6 +91,12 @@ body {
   transition: background-color 0.3s ease, transform 0.2s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+.card {
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: #f0f0f0;
+}
 
 .button:hover {
   background-color: #0056b3;
@@ -107,12 +113,6 @@ body {
   opacity: 0;
   transition: opacity 0.2s ease-out;
   pointer-events: none;
-}
-
-.snoo {
-  display: block;
-  max-width: 100%;
-  height: auto; /* Maintain aspect ratio */
 }
 
 @keyframes fall {
