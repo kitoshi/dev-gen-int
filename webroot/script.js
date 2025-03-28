@@ -25,6 +25,7 @@ class App {
     this.cardBack = document.querySelector('.back');
     this.output = document.querySelector('#messageOutput');
     this.snooImage = document.querySelector('.snoo');
+    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || '[]';
     this.startX = 0;
     this.currentX = 0;
     this.dragging = false;
@@ -67,6 +68,7 @@ class App {
     this.card.addEventListener('pointerleave', this.#onPointerUp);
     document.getElementById('clearMatches')?.addEventListener('click', () => {
       localStorage.removeItem('doneUsers');
+      postWebViewMessage({ type: 'webViewReady' });
     });
     document.getElementById('flip')?.addEventListener('click', () => {
       this.#onCardClick();
@@ -141,8 +143,8 @@ class App {
   };
 
   #setLocalStorage = (key) => {
-    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || '[]';
-    this.doneUsers.push(key);
+    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || [];
+    this.doneUsers?.push(key);
     localStorage.setItem('doneUsers', JSON.stringify(this.doneUsers));
   };
 
@@ -219,6 +221,9 @@ class App {
             this.userSubreddits = JSON.parse(user.value);
             //filter out this user
             if (this.userKey !== this.username) {
+              if (this.doneUsers?.includes(this.userKey)) {
+                continue; //skip this user
+              }
               //filter out already matched users
 
               console.log('Current Match User:', this.userKey);
@@ -229,10 +234,9 @@ class App {
 
               return;
             }
-
-            console.log('No more users to match in InitialData');
           }
-          break;
+          console.log('No more users to match in InitialData');
+          return this.#showMatches();
         case 'refreshData':
           removeOldCard(this.cardContainer);
 
