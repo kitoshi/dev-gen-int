@@ -8,7 +8,8 @@ Devvit.configure({
 });
 
 Devvit.addCustomPostType({
-  name: 'Subreddit Friendr',
+  name: 'Frienddit',
+  description: 'A Reddit friend/subreddit finder app',
   height: 'tall',
   render: (context) => {
     // Fetch username
@@ -98,7 +99,6 @@ Devvit.addCustomPostType({
             const [user, newFriend] = dataString.split(',');
 
             if (user && newFriend) {
-              // Get the existing friends list from Redis, or default to an empty string if not found
               const existingFriends = await context.redis.hGet(
                 'user_friends',
                 user
@@ -135,18 +135,35 @@ Devvit.addCustomPostType({
                 friendsArray,
                 '\nUpdated in Redis user_friends'
               );
-
-              // Send the updated data to refresh the UI
-              webView.postMessage({
-                type: 'refreshData',
-                data: { username, subreddits, allUserData, allUserMatches }
-              });
             }
+
+            // Fetch the updated list of all user matches from Redis
+            let hScanResponse = await context.redis.hScan('user_friends', 0);
+            console.log('Redis Data user_friends:', hScanResponse);
+            let userMatchesSet = new Set<JSONValue>();
+            hScanResponse.fieldValues.forEach((item) => {
+              userMatchesSet.add(item as unknown as JSONValue);
+            });
+
+            let updatedAllUserMatches = [...userMatchesSet];
+
+            // Send the updated data to refresh the UI
+            webView.postMessage({
+              type: 'refreshData',
+              data: {
+                username,
+                subreddits,
+                allUserData,
+                allUserMatches: updatedAllUserMatches
+              }
+            });
+
             break;
           case 'resetData':
             // Split the incoming message to extract the user and friend
             const resetString = (message.data as string).toString();
-            const [resetUser, resetTarget] = resetString.split(',');
+            console.log('Reset string:', resetString);
+            const resetUser = resetString;
             const numFieldsRemoved = await context.redis.hDel(
               'user_subreddits',
               [resetUser]
@@ -154,14 +171,39 @@ Devvit.addCustomPostType({
             const numRemoved = await context.redis.hDel('user_friends', [
               resetUser
             ]);
-            console.log(numRemoved);
             console.log(
               'Resetting data: ',
 
               resetUser,
-              resetTarget,
+
               numFieldsRemoved
             );
+            console.log('Resetting data user_friends: ', numRemoved);
+
+            // Fetch the updated list of all user matches from Redis
+            let hScanResponseFriends = await context.redis.hScan(
+              'user_friends',
+              0
+            );
+            console.log('Redis Data user_friends:', hScanResponseFriends);
+            let friendMatchesSet = new Set<JSONValue>();
+            hScanResponseFriends.fieldValues.forEach((item) => {
+              friendMatchesSet.add(item as unknown as JSONValue);
+            });
+
+            let updatedAllFriendsMatches = [...friendMatchesSet];
+
+            // Send the updated data to refresh the UI
+            webView.postMessage({
+              type: 'refreshData',
+              data: {
+                username,
+                subreddits,
+                allUserData,
+                allUserMatches: updatedAllFriendsMatches
+              }
+            });
+
           case 'getSnoovatar':
             const snooUser = (message.data as string)?.toString();
             console.log('Getting Snoovatar for:', snooUser);

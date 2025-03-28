@@ -24,11 +24,6 @@ class App {
     this.cardBack = document.querySelector('.back');
     this.output = document.querySelector('#messageOutput');
     this.snooImage = document.querySelector('.snoo');
-    this.doneUsers = JSON.parse(
-      localStorage.getItem('doneUsers') !== null
-        ? localStorage.getItem('doneUsers')
-        : '[]'
-    );
     this.startX = 0;
     this.currentX = 0;
     this.dragging = false;
@@ -56,13 +51,6 @@ class App {
     this.card.querySelector('.front').style.display = 'none'; // Hide the front
     this.card.querySelector('.back').style.display = 'block'; // Show the back
   };
-  #onResetClick = () => {
-    postWebViewMessage({
-      type: 'resetData',
-      data: this.username + ',' + ''
-    });
-    console.log('Resetting...');
-  };
 
   #addEventListeners = () => {
     this.card.addEventListener('pointerdown', this.#onPointerDown);
@@ -74,16 +62,19 @@ class App {
     this.card.addEventListener('touchend', this.#onPointerUp);
     document.getElementById('clearMatches')?.addEventListener('click', () => {
       localStorage.removeItem('doneUsers');
+      this.doneUsers = '[]';
+      console.log(localStorage.getItem('doneUsers')); // Check if it was removed
       this.#selectDOM();
       fadeOut(this.voteIndicator);
       fadeOut(this.card);
-      window.location.reload();
+      removeOldCard(this.card);
+      postWebViewMessage({
+        type: 'resetData',
+        data: this.username
+      });
     });
     document.getElementById('flip')?.addEventListener('click', () => {
       this.#onCardClick();
-    });
-    document.getElementById('reset')?.addEventListener('click', () => {
-      this.#onResetClick();
     });
   };
   #selectDOM = () => {
@@ -134,7 +125,7 @@ class App {
     if (Math.abs(this.currentX) > 100) {
       if (this.currentX > 0) {
         console.log(
-          'Posting Data:',
+          'Posting Upvote Data:',
           this.username.toString() + ',' + this.userKey.toString()
         );
         if (this.username && this.userKey) {
@@ -145,7 +136,18 @@ class App {
         }
         fadeOut(this.voteIndicator);
         fadeOut(this.card);
+        return;
       }
+      console.log('Posting Downvote Data:', this.username.toString());
+      if (this.username) {
+        postWebViewMessage({
+          type: 'matchUpdate',
+          data: this.username.toString()
+        });
+      }
+      fadeOut(this.voteIndicator);
+      fadeOut(this.card);
+      return;
     } else {
       this.card.style.transform = 'translateX(0)';
     }
@@ -162,12 +164,22 @@ class App {
     this.#selectDOM();
     this.#addEventListeners();
     let matches = [];
-
+    let thisUserMatches = [];
     // Clear any previous match details
     this.matchUsername.innerHTML = '';
-
     for (const user of this.allUserMatches) {
-      if (user.field !== this.username && user.value.includes(this.username)) {
+      if (user.field === this.username) {
+        // Check if the user is the current user
+        thisUserMatches = user.value;
+        matches.push(user.value);
+      }
+    }
+    for (const user of this.allUserMatches) {
+      if (
+        user.field !== this.username &&
+        user.value.includes(this.username) &&
+        thisUserMatches.includes(user.field)
+      ) {
         // Create a hyperlink for each match
         const matchLink = document.createElement('a');
         matchLink.href = `https://www.reddit.com/user/${user.field}`;
@@ -223,6 +235,11 @@ class App {
       this.subreddits = subreddits;
       this.allUserData = allUserData;
       this.allUserMatches = allUserMatches;
+      this.doneUsers = JSON.parse(
+        localStorage.getItem('doneUsers') !== null
+          ? localStorage.getItem('doneUsers')
+          : '[]'
+      );
       switch (message.type) {
         case 'initialData':
           console.log('Entered initialData');
@@ -245,7 +262,10 @@ class App {
               console.log('Current Match User:', this.userKey);
               this.#getSnooImage(this.userKey);
               this.matchUsername.innerText = this.userKey.toString();
-              this.matchDetails.innerText = this.userSubreddits.toString();
+              this.matchDetails.innerText =
+                this.userSubreddits.toString().length > 100
+                  ? this.userSubreddits.toString().slice(0, 100) + '...'
+                  : this.userSubreddits.toString();
               this.#setLocalStorage(this.userKey);
 
               return;
@@ -286,13 +306,17 @@ class App {
             this.output = document.querySelector('#messageOutput');
             this.#getSnooImage(this.userKey);
             this.matchUsername.innerText = this.userKey.toString();
-            this.matchDetails.innerText = this.userSubreddits.toString();
+            this.matchDetails.innerText =
+              this.userSubreddits.toString().length > 200
+                ? this.userSubreddits.toString().slice(0, 200) + '...'
+                : this.userSubreddits.toString();
             fadeIn(this.card);
 
             return;
           }
 
           console.log('No more users to match in RefreshData');
+          fadeOut(this.card);
           this.#hideButtons();
           return this.#showMatches();
 
