@@ -131,6 +131,7 @@ a:hover {
   opacity: 0;
   transition: opacity 0.2s ease-out;
   pointer-events: none;
+  z-index: 9999;
 }
 .match-username {
   color: #fff; /* Text color */
@@ -138,6 +139,15 @@ a:hover {
     /* Horizontal, vertical, blur radius, and color */ -1px -1px 2px black,
     1px -1px 2px black, -1px 1px 2px black; /* White outline effect */
 }
+.h2 {
+  .match-username {
+    color: #fff; /* Text color */
+    text-shadow: 1px 1px 2px black,
+      /* Horizontal, vertical, blur radius, and color */ -1px -1px 2px black,
+      1px -1px 2px black, -1px 1px 2px black; /* White outline effect */
+  }
+}
+
 .confetti {
   position: fixed;
   top: 0;

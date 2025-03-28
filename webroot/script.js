@@ -163,6 +163,7 @@ class App {
     createNewMatchCard(this.cardContainer);
     this.#selectDOM();
     this.#addEventListeners();
+    this.#getSnooImage(this.username);
     let matches = [];
     let thisUserMatches = [];
     // Clear any previous match details

@@ -73,7 +73,7 @@ export function createNewCard(cardContainer) {
   const flipButton = document.createElement('button');
   flipButton.classList.add('button');
   flipButton.id = 'flip';
-  flipButton.innerText = 'Flip';
+  flipButton.innerText = 'Info';
   buttons.appendChild(flipButton);
   card.appendChild(buttons);
   card.style.display = 'none';
@@ -101,7 +101,6 @@ export function createNewMatchCard(cardContainer) {
   const matchDetails = document.createElement('p');
   matchDetails.classList.add('match-details');
 
-  //add flip button
   const clearButton = document.createElement('button');
   clearButton.classList.add('button');
   clearButton.id = 'clearMatches';
