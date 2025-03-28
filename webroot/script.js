@@ -17,7 +17,6 @@ class App {
   userSubreddits;
   constructor() {
     this.card = document.querySelector('.card');
-    this.usernameLabel = document.querySelector('.profile-data');
     this.matchUsername = document.querySelector('.match-username');
     this.matchDetails = document.querySelector('.match-details');
     this.cardContainer = document.querySelector('.card-container');
@@ -25,7 +24,11 @@ class App {
     this.cardBack = document.querySelector('.back');
     this.output = document.querySelector('#messageOutput');
     this.snooImage = document.querySelector('.snoo');
-    this.doneUsers = JSON.parse(localStorage.getItem('doneUsers')) || '[]';
+    this.doneUsers = JSON.parse(
+      localStorage.getItem('doneUsers') !== null
+        ? localStorage.getItem('doneUsers')
+        : '[]'
+    );
     this.startX = 0;
     this.currentX = 0;
     this.dragging = false;
@@ -66,9 +69,15 @@ class App {
     this.card.addEventListener('pointermove', this.#onPointerMove);
     this.card.addEventListener('pointerup', this.#onPointerUp);
     this.card.addEventListener('pointerleave', this.#onPointerUp);
+    this.card.addEventListener('touchstart', this.#onPointerDown);
+    this.card.addEventListener('touchmove', this.#onPointerMove);
+    this.card.addEventListener('touchend', this.#onPointerUp);
     document.getElementById('clearMatches')?.addEventListener('click', () => {
       localStorage.removeItem('doneUsers');
-      postWebViewMessage({ type: 'webViewReady' });
+      this.#selectDOM();
+      fadeOut(this.voteIndicator);
+      fadeOut(this.card);
+      window.location.reload();
     });
     document.getElementById('flip')?.addEventListener('click', () => {
       this.#onCardClick();
@@ -91,7 +100,7 @@ class App {
     this.dragging = false;
   };
   #onPointerDown = (event) => {
-    this.startX = event.clientX;
+    this.startX = event.clientX || event.touches[0].clientX;
     this.dragging = true;
     this.card.style.transition = 'none';
     this.voteIndicator.innerText = '';
@@ -100,7 +109,7 @@ class App {
 
   #onPointerMove = (event) => {
     if (!this.dragging) return;
-    this.currentX = event.clientX - this.startX;
+    this.currentX = (event.clientX || event.touches[0].clientX) - this.startX;
     this.card.style.transform = `translateX(${this.currentX}px)`;
 
     if (this.currentX > 50) {
@@ -151,6 +160,7 @@ class App {
   #showMatches = () => {
     createNewMatchCard(this.cardContainer);
     this.#selectDOM();
+    this.#addEventListeners();
     let matches = [];
 
     // Clear any previous match details
@@ -192,10 +202,16 @@ class App {
   #onMessage = (ev) => {
     if (ev.data.type !== 'devvit-message') return;
     const { message } = ev.data.data;
+    console.log('Message type:', message?.type);
+    this.#selectDOM();
     if (this.output) {
       this.output.replaceChildren(JSON.stringify(message, undefined, 2));
     }
     console.log(message.type?.toString());
+    if (this.card == undefined) {
+      console.log('Card is undefined');
+      this.card = createNewCard(this.cardContainer);
+    }
     if (message.type === 'snoovatar') {
       console.log('Snoovatar received:', message.data);
       this.card.style.backgroundImage = `url(${message.data})`; // Set background
@@ -236,7 +252,11 @@ class App {
             }
           }
           console.log('No more users to match in InitialData');
-          return this.#showMatches();
+          removeOldCard(this.cardContainer);
+          this.#showMatches();
+          this.#selectDOM();
+          this.#addEventListeners();
+          return;
         case 'refreshData':
           removeOldCard(this.cardContainer);
 

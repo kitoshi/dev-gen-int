@@ -51,7 +51,9 @@ export function createNewCard(cardContainer) {
   matchDetails.classList.add('match-details');
   const back = document.createElement('div');
   back.classList.add('back');
-  back.innerText = 'Back of card';
+  const backText = document.createElement('h2');
+  backText.innerText = 'Subreddits';
+  back.appendChild(backText);
 
   // Append elements to card
   detailsWrapper.appendChild(matchUsername);
@@ -81,14 +83,15 @@ export function createNewCard(cardContainer) {
 }
 
 export function createNewMatchCard(cardContainer) {
-  console.log('Creating new card...');
+  console.log('Creating new Final Match card...');
 
   const card = document.createElement('div');
   card.classList.add('card');
+  card.classList.add('final-card');
 
   const detailsWrapper = document.createElement('div');
-
-  const profileData = document.createElement('p');
+  detailsWrapper.classList.add('details-wrapper');
+  const profileData = document.createElement('h2');
   profileData.classList.add('profile-data');
   profileData.innerText = 'Your Matches!';
 
@@ -98,10 +101,17 @@ export function createNewMatchCard(cardContainer) {
   const matchDetails = document.createElement('p');
   matchDetails.classList.add('match-details');
 
+  //add flip button
+  const clearButton = document.createElement('button');
+  clearButton.classList.add('button');
+  clearButton.id = 'clearMatches';
+  clearButton.innerText = 'Clear Matches';
+
   // Append elements to card
   detailsWrapper.appendChild(profileData);
   detailsWrapper.appendChild(matchUsername);
   detailsWrapper.appendChild(matchDetails);
+  detailsWrapper.appendChild(clearButton);
   card.appendChild(detailsWrapper);
 
   card.style.display = 'none';
