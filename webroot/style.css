@@ -109,6 +109,12 @@ body {
   pointer-events: none;
 }
 
+.snoo {
+  display: block;
+  max-width: 100%;
+  height: auto; /* Maintain aspect ratio */
+}
+
 @keyframes fall {
   0% {
     transform: translateY(-100px) rotate(0deg);

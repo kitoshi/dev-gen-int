@@ -157,10 +157,21 @@ Devvit.addCustomPostType({
             console.log(numRemoved);
             console.log(
               'Resetting data: ',
+
               resetUser,
               resetTarget,
               numFieldsRemoved
             );
+          case 'getSnoovatar':
+            const snooUser = (message.data as string)?.toString();
+            console.log('Getting Snoovatar for:', snooUser);
+            const snoovatar = await context.reddit.getSnoovatarUrl(snooUser);
+            console.log('Snoovatar:', snoovatar);
+            webView.postMessage({
+              type: 'snoovatar',
+              data: snoovatar ?? ''
+            });
+            break;
           default:
             break;
         }

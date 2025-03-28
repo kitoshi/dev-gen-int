@@ -60,6 +60,10 @@ export function createNewCard(cardContainer) {
   card.appendChild(front);
   front.appendChild(detailsWrapper);
   card.appendChild(back);
+  const snoo = document.createElement('img');
+  snoo.classList.add('snoo');
+  snoo.src = '';
+  card.appendChild(snoo);
 
   const buttons = document.createElement('div');
   buttons.classList.add('buttons');

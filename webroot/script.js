@@ -24,6 +24,7 @@ class App {
     this.cardFront = document.querySelector('.front');
     this.cardBack = document.querySelector('.back');
     this.output = document.querySelector('#messageOutput');
+    this.snooImage = document.querySelector('.snoo');
     this.startX = 0;
     this.currentX = 0;
     this.dragging = false;
@@ -79,6 +80,7 @@ class App {
     this.matchUsername = document.querySelector('.match-username');
     this.matchDetails = document.querySelector('.match-details');
     this.cardContainer = document.querySelector('.card-container');
+    this.snooImage = document.querySelector('.snoo');
     this.card = document.querySelector('.card');
     this.startX = 0;
     this.currentX = 0;
@@ -171,6 +173,14 @@ class App {
     shootConfetti();
   };
 
+  #getSnooImage = (username) => {
+    console.log('Getting Snoovatar for:', username);
+    postWebViewMessage({
+      type: 'getSnoovatar',
+      data: username
+    });
+  };
+
   #hideButtons = () => {
     document.querySelector('.buttons')?.remove();
   };
@@ -181,7 +191,11 @@ class App {
     if (this.output) {
       this.output.replaceChildren(JSON.stringify(message, undefined, 2));
     }
-    console.log(message.type.toString());
+    console.log(message.type?.toString());
+    if (message.type === 'snoovatar') {
+      console.log('Snoovatar received:', message.data);
+      this.card.style.backgroundImage = `url(${message.data})`; // Set background
+    }
     if (message.type === 'initialData' || message.type === 'refreshData') {
       const { username, subreddits, allUserData, allUserMatches } =
         message.data;
@@ -207,6 +221,7 @@ class App {
               //filter out already matched users
 
               console.log('Current Match User:', this.userKey);
+              this.#getSnooImage(this.userKey);
               this.matchUsername.innerText = this.userKey.toString();
               this.matchDetails.innerText = this.userSubreddits.toString();
               this.#setLocalStorage(this.userKey);
@@ -244,7 +259,7 @@ class App {
             this.#setLocalStorage(this.userKey);
 
             this.output = document.querySelector('#messageOutput');
-
+            this.#getSnooImage(this.userKey);
             this.matchUsername.innerText = this.userKey.toString();
             this.matchDetails.innerText = this.userSubreddits.toString();
             fadeIn(this.card);
