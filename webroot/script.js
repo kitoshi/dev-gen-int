@@ -61,22 +61,27 @@ class App {
     this.card.addEventListener('touchmove', this.#onPointerMove);
     this.card.addEventListener('touchend', this.#onPointerUp);
     document.getElementById('clearMatches')?.addEventListener('click', () => {
-      localStorage.removeItem('doneUsers');
-      this.doneUsers = '[]';
-      console.log(localStorage.getItem('doneUsers')); // Check if it was removed
-      this.#selectDOM();
-      fadeOut(this.voteIndicator);
-      fadeOut(this.card);
-      removeOldCard(this.card);
-      postWebViewMessage({
-        type: 'resetData',
-        data: this.username
-      });
+      this.#resetCard();
     });
     document.getElementById('flip')?.addEventListener('click', () => {
       this.#onCardClick();
     });
   };
+
+  #resetCard = () => {
+    localStorage.removeItem('doneUsers');
+    this.doneUsers = '[]';
+    console.log(localStorage.getItem('doneUsers')); // Check if it was removed
+    this.#selectDOM();
+    fadeOut(this.voteIndicator);
+    fadeOut(this.card);
+    removeOldCard(this.card);
+    postWebViewMessage({
+      type: 'resetData',
+      data: this.username
+    });
+  };
+
   #selectDOM = () => {
     this.usernameLabel = document.querySelector('.profile-data');
     this.matchUsername = document.querySelector('.match-username');
@@ -212,6 +217,15 @@ class App {
     document.querySelector('.buttons')?.remove();
   };
 
+  #logContext = () => {
+    console.log('Entered initialData');
+    console.log('Username:', this.username);
+    console.log('Subreddits:', this.subreddits);
+    console.log('All User Data:', this.allUserData);
+    console.log('All User Matches:', this.allUserMatches);
+    console.log('Done Users:', this.doneUsers);
+  };
+
   #onMessage = (ev) => {
     if (ev.data.type !== 'devvit-message') return;
     const { message } = ev.data.data;
@@ -245,12 +259,7 @@ class App {
       this.#selectDOM();
       switch (message.type) {
         case 'initialData':
-          console.log('Entered initialData');
-          console.log('Username:', this.username);
-          console.log('Subreddits:', this.subreddits);
-          console.log('All User Data:', this.allUserData);
-          console.log('All User Matches:', this.allUserMatches);
-          console.log('Done Users:', this.doneUsers);
+          this.#logContext();
           for (const user of this.allUserData) {
             this.userKey = user.field;
             this.userSubreddits = JSON.parse(user.value);
@@ -279,12 +288,7 @@ class App {
           return;
         case 'refreshData':
           removeOldCard(this.cardContainer);
-          console.log('Entered refreshData');
-          console.log('Username:', this.username);
-          console.log('Subreddits:', this.subreddits);
-          console.log('All User Data:', this.allUserData);
-          console.log('All User Matches:', this.allUserMatches);
-          console.log('Done Users:', this.doneUsers);
+          this.#logContext();
           for (const user of this.allUserData) {
             this.userKey = user.field;
             this.userSubreddits = JSON.parse(user.value);
