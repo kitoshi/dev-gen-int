@@ -224,6 +224,7 @@ class App {
     if (this.card == undefined) {
       console.log('Card is undefined');
       this.card = createNewCard(this.cardContainer);
+      this.#addEventListeners();
     }
     if (message.type === 'snoovatar') {
       console.log('Snoovatar received:', message.data);
@@ -241,6 +242,7 @@ class App {
           ? localStorage.getItem('doneUsers')
           : '[]'
       );
+      this.#selectDOM();
       switch (message.type) {
         case 'initialData':
           console.log('Entered initialData');
@@ -249,17 +251,14 @@ class App {
           console.log('All User Data:', this.allUserData);
           console.log('All User Matches:', this.allUserMatches);
           console.log('Done Users:', this.doneUsers);
-          fadeIn(this.card);
           for (const user of this.allUserData) {
             this.userKey = user.field;
             this.userSubreddits = JSON.parse(user.value);
             //filter out this user
             if (this.userKey !== this.username) {
               if (this.doneUsers?.includes(this.userKey)) {
-                continue; //skip this user
+                continue;
               }
-              //filter out already matched users
-
               console.log('Current Match User:', this.userKey);
               this.#getSnooImage(this.userKey);
               this.matchUsername.innerText = this.userKey.toString();
@@ -268,7 +267,7 @@ class App {
                   ? this.userSubreddits.toString().slice(0, 100) + '...'
                   : this.userSubreddits.toString();
               this.#setLocalStorage(this.userKey);
-
+              fadeIn(this.card);
               return;
             }
           }
@@ -280,7 +279,6 @@ class App {
           return;
         case 'refreshData':
           removeOldCard(this.cardContainer);
-
           console.log('Entered refreshData');
           console.log('Username:', this.username);
           console.log('Subreddits:', this.subreddits);
@@ -312,15 +310,12 @@ class App {
                 ? this.userSubreddits.toString().slice(0, 200) + '...'
                 : this.userSubreddits.toString();
             fadeIn(this.card);
-
             return;
           }
-
           console.log('No more users to match in RefreshData');
           fadeOut(this.card);
           this.#hideButtons();
           return this.#showMatches();
-
         default:
           break;
       }

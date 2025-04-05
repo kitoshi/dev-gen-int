@@ -10,6 +10,9 @@ export function fadeIn(element) {
 
 export function fadeOut(element) {
   console.log('Fading out card...');
+  if (element == null) {
+    return;
+  }
   element.style.transition = 'opacity 0.5s ease-in-out';
   element.style.opacity = '0';
 }

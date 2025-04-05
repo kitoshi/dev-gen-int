@@ -192,10 +192,8 @@ Devvit.addCustomPostType({
             });
 
             let updatedAllFriendsMatches = [...friendMatchesSet];
-
-            // Send the updated data to refresh the UI
             webView.postMessage({
-              type: 'refreshData',
+              type: 'initialData',
               data: {
                 username,
                 subreddits,
@@ -203,7 +201,7 @@ Devvit.addCustomPostType({
                 allUserMatches: updatedAllFriendsMatches
               }
             });
-
+            break;
           case 'getSnoovatar':
             const snooUser = (message.data as string)?.toString();
             console.log('Getting Snoovatar for:', snooUser);
@@ -239,7 +237,10 @@ Devvit.addCustomPostType({
             <hstack>
               <text size='medium'>Your Subreddits: &nbsp;</text>
               <text size='medium' weight='bold'>
-                {subreddits ? subreddits.toString() : 'None'}
+                {subreddits
+                  ? subreddits.toString().slice(0, 50) +
+                    (subreddits.toString().length > 50 ? '...' : '')
+                  : 'None'}
               </text>
             </hstack>
             <hstack>

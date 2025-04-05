@@ -1,6 +1,6 @@
 # Frienddit
 
-Frienddit is a web application that allows users to like or dislike profiles of other users based on their subreddit activity. The app provides a card-based interface where users can swipe or vote on profiles, and matches are stored for future reference.
+Frienddit is a web application that allows users to upvote or downvote profiles of other users based on their subreddit activity. The app provides a card-based interface where users can swipe or vote on profiles, and matches between users are stored for reference.
 
 ## Features
 
