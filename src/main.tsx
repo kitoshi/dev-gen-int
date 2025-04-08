@@ -1,7 +1,18 @@
 import './redis.js';
-import { Devvit, JSONValue, useState, useWebView } from '@devvit/public-api';
+import {
+  Devvit,
+  JSONValue,
+  useAsync,
+  useState,
+  useWebView
+} from '@devvit/public-api';
 import type { DevvitMessage, WebViewMessage } from './message.js';
-import { matchUpdate, resetData } from './redis.js';
+import {
+  getAllUsersMatches,
+  getAllUsersSubreddits,
+  matchUpdate,
+  resetData
+} from './redis.js';
 
 Devvit.configure({
   redditAPI: true,
@@ -48,33 +59,16 @@ Devvit.addCustomPostType({
       return subredditList;
     });
 
-    // Fetch all usernames from Redis using scan
-    const [allUserData] = useState(async () => {
-      const hScanResponse = await context.redis.hScan('user_subreddits', 0);
-      console.log('Redis Data user_subreddits:', hScanResponse);
-      const userDataSet = new Set<JSONValue>();
-      hScanResponse.fieldValues.forEach((item) => {
-        userDataSet.add(item as unknown as JSONValue);
+    const { data: allUsersSubreddits, loading: allUsersSubredditsLoading } =
+      useAsync(async () => {
+        return await getAllUsersSubreddits(context);
       });
 
-      const userDataList = [...userDataSet]; //
-
-      return userDataList ?? []; // Return all the usernames collected
-    });
-
-    // Fetch all usernames from Redis using scan
-    const [allUserMatches] = useState(async () => {
-      const hScanResponse = await context.redis.hScan('user_friends', 0);
-      console.log('Redis Data user_friends:', hScanResponse);
-      const userDataSet = new Set<JSONValue>();
-      hScanResponse.fieldValues.forEach((item) => {
-        userDataSet.add(item as unknown as JSONValue);
-      });
-
-      const userMatchesList = [...userDataSet];
-
-      return userMatchesList ?? [];
-    });
+    const { data: allUsersMatches, loading: allUsersMatchesLoading } = useAsync(
+      async () => {
+        return await getAllUsersMatches(context);
+      }
+    );
 
     const webView = useWebView<WebViewMessage, DevvitMessage>({
       url: 'page.html',
@@ -85,12 +79,17 @@ Devvit.addCustomPostType({
             console.log('Sending initial data:', {
               username,
               subreddits,
-              allUserData,
-              allUserMatches
+              allUserData: allUsersSubreddits,
+              allUserMatches: allUsersMatches
             });
             webView.postMessage({
               type: 'initialData',
-              data: { username, subreddits, allUserData, allUserMatches }
+              data: {
+                username,
+                subreddits,
+                allUserData: allUsersSubreddits,
+                allUserMatches: allUsersMatches
+              }
             });
             break;
           case 'matchUpdate':
@@ -101,7 +100,7 @@ Devvit.addCustomPostType({
               data: {
                 username,
                 subreddits,
-                allUserData,
+                allUserData: allUsersSubreddits,
                 allUserMatches: updatedAllUserMatches
               }
             });
@@ -109,14 +108,12 @@ Devvit.addCustomPostType({
             break;
           case 'resetData':
             const updatedAllFriendsMatches = await resetData(message, context);
-            // Split the incoming message to extract the user and friend
-
             webView.postMessage({
               type: 'initialData',
               data: {
                 username,
                 subreddits,
-                allUserData,
+                allUserData: allUsersSubreddits,
                 allUserMatches: updatedAllFriendsMatches
               }
             });
@@ -165,7 +162,9 @@ Devvit.addCustomPostType({
             <hstack>
               <text size='medium'>Current Users: &nbsp;</text>
               <text size='medium' weight='bold'>
-                {Array.isArray(allUserData) ? allUserData.length : 'None'}
+                {Array.isArray(allUsersSubreddits)
+                  ? allUsersSubreddits.length
+                  : 'None'}
               </text>
             </hstack>
           </vstack>

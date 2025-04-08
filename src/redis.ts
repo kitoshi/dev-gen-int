@@ -96,3 +96,29 @@ export async function resetData(
   let updatedAllFriendsMatches = [...friendMatchesSet];
   return updatedAllFriendsMatches;
 }
+
+export async function getAllUsersSubreddits(context: Devvit.Context) {
+  const hScanResponse = await context.redis.hScan('user_subreddits', 0);
+  console.log('Redis Data user_subreddits:', hScanResponse);
+  const userDataSet = new Set<JSONValue>();
+  hScanResponse.fieldValues.forEach((item) => {
+    userDataSet.add(item as unknown as JSONValue);
+  });
+
+  const userDataList = [...userDataSet]; //
+
+  return userDataList ?? []; // Return all the usernames collected
+}
+
+export async function getAllUsersMatches(context: Devvit.Context) {
+  const hScanResponse = await context.redis.hScan('user_friends', 0);
+  console.log('Redis Data user_friends:', hScanResponse);
+  const userDataSet = new Set<JSONValue>();
+  hScanResponse.fieldValues.forEach((item) => {
+    userDataSet.add(item as unknown as JSONValue);
+  });
+
+  const userMatchesList = [...userDataSet];
+
+  return userMatchesList ?? [];
+}
