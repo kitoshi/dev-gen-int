@@ -134,6 +134,7 @@ class App {
           this.username.toString() + ',' + this.userKey.toString()
         );
         if (this.username && this.userKey) {
+          this.#setLocalStorage(this.userKey);
           postWebViewMessage({
             type: 'matchUpdate',
             data: this.username.toString() + ',' + this.userKey.toString()
@@ -145,6 +146,7 @@ class App {
       }
       console.log('Posting Downvote Data:', this.username.toString());
       if (this.username) {
+        this.#setLocalStorage(this.userKey);
         postWebViewMessage({
           type: 'matchUpdate',
           data: this.username.toString()
@@ -231,9 +233,6 @@ class App {
     const { message } = ev.data.data;
     console.log('Message type:', message?.type);
     this.#selectDOM();
-    if (this.output) {
-      this.output.replaceChildren(JSON.stringify(message, undefined, 2));
-    }
     console.log(message.type?.toString());
     if (this.card == undefined) {
       console.log('Card is undefined');
@@ -275,7 +274,6 @@ class App {
                 this.userSubreddits.toString().length > 100
                   ? this.userSubreddits.toString().slice(0, 100) + '...'
                   : this.userSubreddits.toString();
-              this.#setLocalStorage(this.userKey);
               fadeIn(this.card);
               return;
             }
@@ -304,8 +302,6 @@ class App {
             createNewCard(this.cardContainer);
             this.#selectDOM();
             this.#addEventListeners();
-            this.#setLocalStorage(this.userKey);
-
             this.output = document.querySelector('#messageOutput');
             this.#getSnooImage(this.userKey);
             this.matchUsername.innerText = this.userKey.toString();

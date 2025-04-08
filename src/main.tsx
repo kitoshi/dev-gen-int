@@ -10,6 +10,7 @@ import type { DevvitMessage, WebViewMessage } from './message.js';
 import {
   getAllUsersMatches,
   getAllUsersSubreddits,
+  getCurrentUserSubreddits,
   matchUpdate,
   resetData
 } from './redis.js';
@@ -32,31 +33,7 @@ Devvit.addCustomPostType({
 
     // Fetch user comments & posts, extract subreddits, and store in Redis
     const [subreddits] = useState(async () => {
-      if (!username) return []; // Ensure username is available
-
-      // Fetch user data (returns a Listing<Post | Comment>)
-      const userData = await context.reddit.getCommentsAndPostsByUser({
-        username
-      });
-      if (!userData) return [];
-
-      // Extract subreddits
-      const subredditSet = new Set<string>();
-
-      for await (const item of userData) {
-        if ('subredditName' in item) {
-          subredditSet.add(item.subredditName);
-        }
-      }
-
-      const subredditList = [...subredditSet]; //
-      console.log('Initial User Subreddits:', subredditList);
-      // Store in Redis
-      await context.redis.hSet(`user_subreddits`, {
-        [username]: JSON.stringify(subredditList)
-      });
-
-      return subredditList;
+      return await getCurrentUserSubreddits(context, username);
     });
 
     const { data: allUsersSubreddits, loading: allUsersSubredditsLoading } =

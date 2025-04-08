@@ -122,3 +122,34 @@ export async function getAllUsersMatches(context: Devvit.Context) {
 
   return userMatchesList ?? [];
 }
+
+export async function getCurrentUserSubreddits(
+  context: Devvit.Context,
+  username?: string
+) {
+  if (!username) return []; // Ensure username is available
+
+  // Fetch user data (returns a Listing<Post | Comment>)
+  const userData = context.reddit.getCommentsAndPostsByUser({
+    username
+  });
+  if (!userData) return [];
+
+  // Extract subreddits
+  const subredditSet = new Set<string>();
+
+  for await (const item of userData) {
+    if ('subredditName' in item) {
+      subredditSet.add(item.subredditName);
+    }
+  }
+
+  const subredditList = [...subredditSet]; //
+  console.log('Initial User Subreddits:', subredditList);
+  // Store in Redis
+  await context.redis.hSet(`user_subreddits`, {
+    [username]: JSON.stringify(subredditList)
+  });
+
+  return subredditList;
+}
